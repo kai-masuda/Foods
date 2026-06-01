@@ -9,6 +9,9 @@
         .safe { color: black; }                           /* 安全：黒 */
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .recipe-btn-container { margin: 15px 0; }
+        .batch-btn { background-color: #4285F4; color: white; border: none; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .batch-btn:hover { background-color: #357ae8; }
     </style>
 </head>
 <body>
@@ -29,7 +32,6 @@
     <form th:action="@{/ingredients/add}" method="post">
         <input type="text" name="name" placeholder="食材名" required>
         <input type="date" name="expiryDate" required>
-        <!-- step="0.1" を削除して整数のみに制限 -->
         <input type="number" name="quantity" placeholder="数量" required>
         <select name="unit">
             <option value="個">個</option>
@@ -41,16 +43,28 @@
 
     <!-- 一覧表示（期限順） -->
     <h3>📦 食材一覧</h3>
+
+    <!-- 複数選択レシピ検索ボタン -->
+    <div class="recipe-btn-container">
+        <button type="button" class="batch-btn" onclick="searchMultipleRecipes()">🔍 選択した食材でレシピ検索</button>
+        <small style="color: #666; margin-left: 10px;">※使いたい食材にチェックを入れてから押してください</small>
+    </div>
+
     <table>
         <tr>
+            <th style="width: 40px; text-align: center;">選択</th>
             <th>食材名</th>
             <th>数量</th>
             <th>期限</th>
             <th>更新日</th>
             <th>消費</th>
-            <th>レシピ</th>
+            <th>単体レシピ</th>
         </tr>
         <tr th:each="item : ${ingredients}">
+            <!-- 複数選択用のチェックボックス（valueに食材名をセット） -->
+            <td style="text-align: center;">
+                <input type="checkbox" class="ingredient-checkbox" th:value="${item.name}">
+            </td>
             <!-- 期限切れ・期限間近の色変更ロジック -->
             <td th:class="${item.expiryDate.isBefore(today)} ? 'expired' : (${item.expiryDate.isBefore(today.plusDays(4))} ? 'warning' : 'safe')">
                 <span th:text="${item.name}"></span>
@@ -61,20 +75,52 @@
             <td>
                 <!-- 任意の量で消費するボタン -->
                 <form th:action="@{/ingredients/consume/{id}(id=${item.id})}" method="post" style="display:inline;">
-                    <!-- step="0.1" を削除して整数のみに制限 -->
                     <input type="number" name="amount" placeholder="消費量" style="width:60px;" required>
                     <button type="submit">消費</button>
                 </form>
             </td>
             <td>
-                <!-- クックパッドの検索画面を開くフォーム（登録不要・無料） -->
-                <form action="https://cookpad.com" method="get" target="_blank" style="display:inline;">
-                    <input type="hidden" name="keyword" th:value="${item.name}">
-                    <button type="submit" style="background:none; border:none; color:#ff9900; text-decoration:underline; cursor:pointer; font-weight:bold;">🍳 レシピを見る</button>
+                <!-- 単体検索（Google用） -->
+                <form action="https://google.com" method="get" target="_blank" style="display:inline;">
+                    <input type="hidden" name="q" th:value="${item.name}">
+                    <input type="hidden" name="q" value="レシピ">
+                    <button type="submit" style="background:none; border:none; color:blue; text-decoration:underline; cursor:pointer; font-weight:bold;">🔍 単品</button>
                 </form>
             </td>
         </tr>
     </table>
+
+    <!-- ★複数選択検索用の隠しフォーム（Google配信用に action と name を修正） -->
+    <form id="hiddenBatchForm" action="https://google.com" method="get" target="_blank">
+        <input type="hidden" id="hiddenKeyword" name="q">
+    </form>
+
+    <!-- 複数食材を合体させるJavaScript -->
+    <script>
+        function searchMultipleRecipes() {
+            // チェックされている全てのチェックボックスを取得
+            const checkboxes = document.querySelectorAll('.ingredient-checkbox:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('食材を1つ以上選択してください！');
+                return;
+            }
+
+            // チェックされた食材の名前を配列に集める
+            const selectedIngredients = [];
+            checkboxes.forEach(cb => {
+                selectedIngredients.push(cb.value);
+            });
+
+            // 食材名を半角スペースで繋ぎ、最後に「レシピ」というワードを合体させる
+            // 例: "豚バラ キャベツ レシピ"
+            const searchKeyword = selectedIngredients.join(' ') + ' レシピ';
+
+            // 隠しフォームの値を書き換えて自動送信
+            document.getElementById('hiddenKeyword').value = searchKeyword;
+            document.getElementById('hiddenBatchForm').submit();
+        }
+    </script>
 
 </body>
 </html>
