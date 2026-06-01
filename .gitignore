@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# ローカルのデータベースファイルをGitの管理から除外
+/data/
+

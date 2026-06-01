@@ -17,7 +17,7 @@ public class Ingredient {
 
     private String name;        // 食材名
     private LocalDate expiryDate; // 期限
-    private Double quantity;    // 数量（個数やグラム）
+    private Integer quantity;    // 数量（個数やグラム）
     private String unit;        // 単位 ("個" または "g")
     private LocalDate updatedAt; // 更新日
 
@@ -51,11 +51,11 @@ public class Ingredient {
         this.expiryDate = expiryDate;
     }
 
-    public Double getQuantity() {
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Double quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
