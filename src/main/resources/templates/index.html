@@ -4,20 +4,26 @@
     <meta charset="UTF-8">
     <title>冷蔵庫管理アプリ</title>
     <style>
-        .expired { color: red; font-weight: bold; }       /* 期限切れ：赤 */
-        .warning { color: orange; font-weight: bold; }    /* 3日以内：オレンジ */
-        .safe { color: black; }                           /* 安全：黒 */
+        .expired { color: red; font-weight: bold; }
+        .warning { color: orange; font-weight: bold; }
+        .safe { color: black; }
         table { width: 100%; border-collapse: collapse; }
         th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
         .recipe-btn-container { margin: 15px 0; }
         .batch-btn { background-color: #4285F4; color: white; border: none; padding: 8px 15px; font-weight: bold; cursor: pointer; border-radius: 4px; }
         .batch-btn:hover { background-color: #357ae8; }
+        /* エラーメッセージ用のスタイル */
+        .error-msg { color: red; font-size: 0.85em; display: block; margin-top: 2px; }
+        .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; padding: 10px; margin-bottom: 15px; border-radius: 4px; }
     </style>
 </head>
 <body>
 
     <h1>冷蔵庫の中身管理</h1>
     <p>今日の日付: <span th:text="${today}">2026-06-01</span></p>
+
+    <!-- 消費エラーなどの一括エラー通知 -->
+    <div class="alert-danger" th:if="${errorMessage}" th:text="${errorMessage}"></div>
 
     <!-- 食材検索フォーム -->
     <form th:action="@{/ingredients}" method="get">
@@ -27,16 +33,25 @@
     </form>
     <br>
 
-    <!-- 食材登録フォーム -->
+    <!-- 食材登録フォーム（th:objectを追加） -->
     <h3>🛒 食材の追加</h3>
-    <form th:action="@{/ingredients/add}" method="post">
-        <input type="text" name="name" placeholder="食材名" required>
-        <input type="date" name="expiryDate" required>
-        <input type="number" name="quantity" placeholder="数量" required>
-        <select name="unit">
-            <option value="個">個</option>
-            <option value="g">g</option>
-        </select>
+    <form th:action="@{/ingredients/add}" th:object="${ingredient}" method="post">
+        <div>
+            <input type="text" th:field="*{name}" placeholder="食材名">
+            <span class="error-msg" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+        </div>
+        <div>
+            <input type="date" th:field="*{expiryDate}">
+            <span class="error-msg" th:if="${#fields.hasErrors('expiryDate')}" th:errors="*{expiryDate}"></span>
+        </div>
+        <div>
+            <input type="number" th:field="*{quantity}" placeholder="数量">
+            <select th:field="*{unit}">
+                <option value="個">個</option>
+                <option value="g">g</option>
+            </select>
+            <span class="error-msg" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></span>
+        </div>
         <button type="submit">登録</button>
     </form>
     <br>
@@ -44,7 +59,6 @@
     <!-- 一覧表示（期限順） -->
     <h3>📦 食材一覧</h3>
 
-    <!-- 複数選択レシピ検索ボタン -->
     <div class="recipe-btn-container">
         <button type="button" class="batch-btn" onclick="searchMultipleRecipes()">🔍 選択した食材でレシピ検索</button>
         <small style="color: #666; margin-left: 10px;">※使いたい食材にチェックを入れてから押してください</small>
@@ -61,11 +75,9 @@
             <th>単体レシピ</th>
         </tr>
         <tr th:each="item : ${ingredients}">
-            <!-- 複数選択用のチェックボックス（valueに食材名をセット） -->
             <td style="text-align: center;">
                 <input type="checkbox" class="ingredient-checkbox" th:value="${item.name}">
             </td>
-            <!-- 期限切れ・期限間近の色変更ロジック -->
             <td th:class="${item.expiryDate.isBefore(today)} ? 'expired' : (${item.expiryDate.isBefore(today.plusDays(4))} ? 'warning' : 'safe')">
                 <span th:text="${item.name}"></span>
             </td>
@@ -80,7 +92,7 @@
                 </form>
             </td>
             <td>
-                <!-- 単体検索（Google用） -->
+                <!-- 単体検索 -->
                 <form action="https://google.com" method="get" target="_blank" style="display:inline;">
                     <input type="hidden" name="q" th:value="${item.name}">
                     <input type="hidden" name="q" value="レシピ">
@@ -90,33 +102,22 @@
         </tr>
     </table>
 
-    <!-- ★複数選択検索用の隠しフォーム（Google配信用に action と name を修正） -->
     <form id="hiddenBatchForm" action="https://google.com" method="get" target="_blank">
         <input type="hidden" id="hiddenKeyword" name="q">
     </form>
 
-    <!-- 複数食材を合体させるJavaScript -->
     <script>
         function searchMultipleRecipes() {
-            // チェックされている全てのチェックボックスを取得
             const checkboxes = document.querySelectorAll('.ingredient-checkbox:checked');
-            
             if (checkboxes.length === 0) {
                 alert('食材を1つ以上選択してください！');
                 return;
             }
-
-            // チェックされた食材の名前を配列に集める
             const selectedIngredients = [];
             checkboxes.forEach(cb => {
                 selectedIngredients.push(cb.value);
             });
-
-            // 食材名を半角スペースで繋ぎ、最後に「レシピ」というワードを合体させる
-            // 例: "豚バラ キャベツ レシピ"
             const searchKeyword = selectedIngredients.join(' ') + ' レシピ';
-
-            // 隠しフォームの値を書き換えて自動送信
             document.getElementById('hiddenKeyword').value = searchKeyword;
             document.getElementById('hiddenBatchForm').submit();
         }
