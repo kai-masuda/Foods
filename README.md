@@ -9,24 +9,24 @@ food-management-app/ (プロジェクトのルート)
         │   └── com/
         │       └── example/
         │           └── foodapp/
-        │               ├── FoodManagementApplication.java # アプリを起動するメインクラス
+        │               ├── FoodApplication.java # アプリを起動するメインクラス
         │               │
         │               ├── config/
         │               │   └── AppConfig.java          # アプリ全体の共通設定（必要に応じて）
         │               │
-        │               ├── entities/                   # ★データベースのテーブルに対応
+        │               ├── entity/                   # ★データベースのテーブルに対応
         │               │   ├── Food.java               # id, foodName, amount, taste_limit など
         │               │   └── Category.java           # id, categoryName, unit など
         │               │
-        │               ├── repositories/               # ★DB操作（SQL自動生成）の担当
+        │               ├── repository/               # ★DB操作（SQL自動生成）の担当
         │               │   ├── FoodRepository.java     # JpaRepositoryを継承
         │               │   └── CategoryRepository.java # JpaRepositoryを継承
         │               │
-        │               ├── services/                   # ★ビジネスロジック（CRUDの具体的な処理）
+        │               ├── service/                   # ★ビジネスロジック（CRUDの具体的な処理）
         │               │   ├── FoodService.java        # 食品の登録・更新・削除のロジック
         │               │   └── CategoryService.java    # カテゴリ取得などのロジック
         │               │
-        │               └── controllers/                # ★画面からのリクエストの受付窓口
+        │               └── controller/                # ★画面からのリクエストの受付窓口
         │                   ├── FoodController.java     # 食品のCRUD画面の制御
         │                   └── CategoryController.java # カテゴリ選択肢などの制御
         │
