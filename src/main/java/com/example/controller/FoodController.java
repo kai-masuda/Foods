@@ -49,7 +49,7 @@ public class FoodController {
     @PostMapping
     public String store(@ModelAttribute Food food) {
         foodService.saveFood(food); // データベースに保存
-        return "redirect:/foods"; // 保存が終わったら一覧画面に自動で戻る
+        return "redirect:/ingredients"; // 保存が終わったら一覧画面に自動で戻る
     }
     
     // 4. 編集画面の表示
@@ -61,7 +61,7 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
-        return "foods/edit";
+        return "ingredients/edit";
     }
     
     // 5. 更新の実行 (Update)
@@ -69,14 +69,14 @@ public class FoodController {
     public String update(@PathVariable Long id, @ModelAttribute Food food) {
         food.setId(id); // 安全のため、URLのIDをセットする
         foodService.saveFood(food); // データを上書き保存
-        return "redirect:/foods";
+        return "redirect:/ingredients";
     }
     
     // 6. 削除の実行 (Delete)
     @PostMapping("/{id}/delete") // 先ほど登場した destroy 処理です！
     public String destroy(@PathVariable Long id) {
         foodService.deleteFood(id); // データを削除
-        return "redirect:/foods";
+        return "redirect:/ingredients";
     }
 
 }
