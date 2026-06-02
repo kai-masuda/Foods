@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -34,7 +35,8 @@ public class Category {
     @Size(max = 255)
     private String unit;
     
-    @Column(nullable = false)
+    // @OneToManyで1つのカテゴリに対して複数の食材が紐づく(1対多)
+    @OneToMany(mappedBy = "category")
     private List<Food> foods;
 
 }
