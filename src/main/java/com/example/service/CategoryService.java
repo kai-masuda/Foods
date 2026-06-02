@@ -1,5 +1,24 @@
 package com.example.service;
 
-public class CategoryService {
 
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import com.example.entity.Category;
+import com.example.repository.CategoryRepository;
+
+@Service
+public class CategoryService {
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
+
+    // カテゴリー一覧取得
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+    }
+    
 }
