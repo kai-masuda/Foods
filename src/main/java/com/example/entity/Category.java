@@ -7,6 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -34,7 +35,7 @@ public class Category {
     @Size(max = 255)
     private String unit;
     
-    @Column(nullable = false)
+    @OneToMany(mappedBy = "category")
     private List<Food> foods;
 
 }

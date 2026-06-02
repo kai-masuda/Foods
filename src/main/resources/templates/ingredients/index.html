@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>食材一覧</title>
+    <link href="https://jsdelivr.net" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">食材一覧</h1>
+            <a th:href="@{/ingredients/new}" class="btn btn-primary">新規登録</a>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>食材名</th>
+                            <th>量</th>
+                            <th>単位</th>
+                            <th>賞味・消費期限</th>
+                            <th>カテゴリ</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="food : ${foods}">
+                            <td th:text="${food.id}">1</td>
+                            <td th:text="${food.foodName}">トマト</td>
+                            <td th:text="${food.amount}">3</td>
+                            <td th:text="${food.category != null ? food.category.unit : ''}">個</td>
+                            <td th:text="${food.taste_limit}">2026-06-10</td>
+                            <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a th:href="@{/ingredients/{id}/edit(id=${food.id})}" class="btn btn-sm btn-warning">編集</a>
+                                    <form th:action="@{/ingredients/{id}/delete(id=${food.id})}" method="post" onsubmit="return confirm('本当に削除しますか？');">
+                                        <button type="submit" class="btn btn-sm btn-danger">削除</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(foods)}">
+                            <td colspan="7" class="text-center text-muted py-4">食材が登録されていません。</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -8,6 +8,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -28,20 +29,22 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(length =  255, nullable = false)
+    @Column(length = 255, nullable = false)
     @NotBlank(message = "食材名は必須です")
     @Size(max = 255)
     private String foodName;
     
-    @Column(length = 255, nullable = false)
-    @NotBlank(message = "量は必須です")
-    @Size(max = 255)
+    // 【修正】Integer型には @NotBlank ではなく @NotNull を使います（NotBlankは文字列用）
+    @Column(nullable = false)
+    @jakarta.validation.constraints.NotNull(message = "量は必須です")
     private Integer amount;
     
     @Column(nullable = false)
     private LocalDate taste_limit;
     
-    @Column(nullable = false)
+    // 【修正】多対1の関係（複数の食材が1つのカテゴリに属する）を定義
+    @ManyToOne
+    @jakarta.persistence.JoinColumn(name = "category_id", nullable = false)
     private Category category;
     
     @CreatedDate
@@ -51,6 +54,6 @@ public class Food {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updated_at;
-    
 
 }
+
