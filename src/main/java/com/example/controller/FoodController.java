@@ -1,7 +1,6 @@
 package com.example.controller;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -33,7 +32,7 @@ public class FoodController {
         return "foods/index";
     }
     
-    // 【修正】登録画面表示 (URL: GET /foods/new) に変更
+    // 登録画面表示 (URL: GET /foods/new)
     @GetMapping("/new")
     public String createForm(Model model) {
         model.addAttribute("food", new Food());
@@ -44,38 +43,41 @@ public class FoodController {
         return "foods/create";
     }
     
-    // 【修正】登録実行 (URL: POST /foods) 保存後のリダイレクト先を統一
+    // 登録実行 (URL: POST /foods)
     @PostMapping
     public String store(@ModelAttribute Food food) {
         foodService.saveFood(food); 
-        return "redirect:/foods"; // 一覧画面（/foods）に戻るように変更
+        return "redirect:/foods";
     }
     
     // 4. 編集画面の表示 (URL: GET /foods/{id}/edit)
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        Optional<Food> food = foodService.getFoodById(id); 
+        // 【修正】OptionalからFoodオブジェクトを安全に取り出す記述に変更しました
+        Food food = foodService.getFoodById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
         model.addAttribute("food", food);
         
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
-        return "foods/edit"; // テンプレートフォルダ名も「foods」に統一されているか確認してください
+        return "foods/edit";
     }
     
-    // 【修正】5. 更新の実行 (URL: POST /foods/{id}/update)
+    // 5. 更新の実行 (URL: POST /foods/{id}/update)
     @PostMapping("/{id}/update")
     public String update(@PathVariable Long id, @ModelAttribute Food food) {
         food.setId(id); 
         foodService.saveFood(food); 
-        return "redirect:/foods"; // リダイレクト先を修正
+        return "redirect:/foods";
     }
     
-    // 【修正】6. 削除の実行 (URL: POST /foods/{id}/delete)
+    // 6. 削除の実行 (URL: POST /foods/{id}/delete)
     @PostMapping("/{id}/delete") 
     public String destroy(@PathVariable Long id) {
         foodService.deleteFood(id); 
-        return "redirect:/foods"; // リダイレクト先を修正
+        return "redirect:/foods";
     }
 
 }
+

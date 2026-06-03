@@ -1,18 +1,17 @@
 <!DOCTYPE html>
-<!-- 【修正】www. を追加して正しいThymeleafのURLに修正しました -->
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>食材編集</title>
+    <title>食材登録</title>
     <link href="https://jsdelivr.net" rel="stylesheet">
 </head>
 <body class="bg-light">
     <div class="container mt-5" style="max-width: 600px;">
         <div class="card shadow-sm">
             <div class="card-body p-4">
-                <h1 class="h3 card-title mb-4">食材の編集</h1>
+                <h1 class="h3 card-title mb-4">食材の新規登録</h1>
                 
-                <form th:action="@{/foods/{id}/update(id=${food.id})}" th:object="${food}" method="post">
+                <form th:action="@{/foods}" th:object="${food}" method="post">
                     <!-- 食材名 -->
                     <div class="mb-3">
                         <label for="foodName" class="form-label">食材名</label>
@@ -34,14 +33,14 @@
                     <!-- カテゴリ選択 -->
                     <div class="mb-4">
                         <label for="category" class="form-label">カテゴリ</label>
-                        <!-- 【修正】エラーの原因だった th:selected を削除しました。th:field の効果で自動選択されます -->
                         <select th:field="*{category}" class="form-select" required>
+                            <option value="">選択してください</option>
                             <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName + ' (' + cat.unit + ')'}"></option>
                         </select>
                     </div>
                     
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success w-100">更新する</button>
+                        <button type="submit" class="btn btn-primary w-100">登録する</button>
                         <a th:href="@{/foods}" class="btn btn-secondary w-100">戻る</a>
                     </div>
                 </form>

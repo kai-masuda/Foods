@@ -13,7 +13,9 @@ import jakarta.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode; // 【追加】
 import lombok.NoArgsConstructor;
+import lombok.ToString;         // 【追加】
 
 @Entity
 @Data
@@ -35,8 +37,11 @@ public class Category {
     @Size(max = 255)
     private String unit;
     
-    // @OneToManyで1つのカテゴリに対して複数の食材が紐づく(1対多)
+
+ // 【修正】循環参照（無限ループ）を防止する設定を追加
     @OneToMany(mappedBy = "category")
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     private List<Food> foods;
 
 }
