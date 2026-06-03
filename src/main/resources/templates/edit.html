@@ -11,7 +11,7 @@
             <div class="card-body p-4">
                 <h1 class="h3 card-title mb-4">食材の編集</h1>
                 
-                <form th:action="@{/ingredients/{id}/update(id=${food.id})}" th:object="${food}" method="post">
+                <form th:action="@{/foods/{id}/update(id=${food.id})}" th:object="${food}" method="post">
                     <!-- 食材名 -->
                     <div class="mb-3">
                         <label for="foodName" class="form-label">食材名</label>
@@ -40,7 +40,7 @@
                     
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success w-100">更新する</button>
-                        <a th:href="@{/ingredients}" class="btn btn-secondary w-100">戻る</a>
+                        <a th:href="@{/foods}" class="btn btn-secondary w-100">戻る</a>
                     </div>
                 </form>
             </div>

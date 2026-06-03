@@ -11,7 +11,7 @@
             <div class="card-body p-4">
                 <h1 class="h3 card-title mb-4">食材の新規登録</h1>
                 
-                <form th:action="@{/ingredients}" th:object="${food}" method="post">
+                <form th:action="@{/foods}" th:object="${food}" method="post">
                     <!-- 食材名 -->
                     <div class="mb-3">
                         <label for="foodName" class="form-label">食材名</label>
@@ -41,7 +41,7 @@
                     
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary w-100">登録する</button>
-                        <a th:href="@{/ingredients}" class="btn btn-secondary w-100">戻る</a>
+                        <a th:href="@{/foods}" class="btn btn-secondary w-100">戻る</a>
                     </div>
                 </form>
             </div>
