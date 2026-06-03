@@ -8,8 +8,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;  // 【追加】
+import jakarta.persistence.PreUpdate;  // 【追加】
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -34,17 +38,15 @@ public class Food {
     @Size(max = 255)
     private String foodName;
     
-    // 【修正】Integer型には @NotBlank ではなく @NotNull を使います（NotBlankは文字列用）
     @Column(nullable = false)
-    @jakarta.validation.constraints.NotNull(message = "量は必須です")
+    @NotNull(message = "量は必須です")
     private Integer amount;
     
     @Column(nullable = false)
     private LocalDate taste_limit;
     
-    // 【修正】多対1の関係（複数の食材が1つのカテゴリに属する）を定義
     @ManyToOne
-    @jakarta.persistence.JoinColumn(name = "category_id", nullable = false)
+    @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     
     @CreatedDate
@@ -54,6 +56,18 @@ public class Food {
     @LastModifiedDate
     @Column(nullable = false)
     private LocalDateTime updated_at;
-
+    
+    // 【追加】動いていたアプリと全く同じコールバック処理
+    @PrePersist
+    public void onPrePersist() {
+        setCreated_at(LocalDateTime.now());
+        setUpdated_at(LocalDateTime.now());
+    }
+    
+    @PreUpdate
+    public void onPreUpdate() {
+        setUpdated_at(LocalDateTime.now());
+    }
 }
+
 
