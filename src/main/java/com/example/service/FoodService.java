@@ -36,7 +36,7 @@ public class FoodService {
     
     // 食材の消費
     @Transactional
-    public void deleteMessage(Long id) {
+    public void deleteFood(Long id) {
         foodRepository.deleteById(id);
     }
 }
