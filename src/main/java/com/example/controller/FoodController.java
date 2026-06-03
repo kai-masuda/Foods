@@ -16,7 +16,7 @@ import com.example.entity.Category;
 import com.example.entity.Food;
 
 @Controller
-@RequestMapping("/ingredients")
+@RequestMapping("/foods")
 public class FoodController {
     
     @Autowired
@@ -25,15 +25,15 @@ public class FoodController {
     @Autowired
     private com.example.service.CategoryService categoryService;
     
-    // 一覧表示 (URL: GET /ingredients)
+    // 一覧表示 (URL: GET /foods)
     @GetMapping
     public String index(Model model) {
         List<Food> foods = foodService.getAllFoods();
         model.addAttribute("foods", foods);
-        return "ingredients/index";
+        return "foods/index";
     }
     
-    // 【修正】登録画面表示 (URL: GET /ingredients/new) に変更
+    // 【修正】登録画面表示 (URL: GET /foods/new) に変更
     @GetMapping("/new")
     public String createForm(Model model) {
         model.addAttribute("food", new Food());
@@ -41,17 +41,17 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
-        return "ingredients/create";
+        return "foods/create";
     }
     
-    // 【修正】登録実行 (URL: POST /ingredients) 保存後のリダイレクト先を統一
+    // 【修正】登録実行 (URL: POST /foods) 保存後のリダイレクト先を統一
     @PostMapping
     public String store(@ModelAttribute Food food) {
         foodService.saveFood(food); 
-        return "redirect:/ingredients"; // 一覧画面（/ingredients）に戻るように変更
+        return "redirect:/foods"; // 一覧画面（/foods）に戻るように変更
     }
     
-    // 4. 編集画面の表示 (URL: GET /ingredients/{id}/edit)
+    // 4. 編集画面の表示 (URL: GET /foods/{id}/edit)
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
         Optional<Food> food = foodService.getFoodById(id); 
@@ -60,22 +60,22 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
-        return "ingredients/edit"; // テンプレートフォルダ名も「ingredients」に統一されているか確認してください
+        return "foods/edit"; // テンプレートフォルダ名も「foods」に統一されているか確認してください
     }
     
-    // 【修正】5. 更新の実行 (URL: POST /ingredients/{id}/update)
+    // 【修正】5. 更新の実行 (URL: POST /foods/{id}/update)
     @PostMapping("/{id}/update")
     public String update(@PathVariable Long id, @ModelAttribute Food food) {
         food.setId(id); 
         foodService.saveFood(food); 
-        return "redirect:/ingredients"; // リダイレクト先を修正
+        return "redirect:/foods"; // リダイレクト先を修正
     }
     
-    // 【修正】6. 削除の実行 (URL: POST /ingredients/{id}/delete)
+    // 【修正】6. 削除の実行 (URL: POST /foods/{id}/delete)
     @PostMapping("/{id}/delete") 
     public String destroy(@PathVariable Long id) {
         foodService.deleteFood(id); 
-        return "redirect:/ingredients"; // リダイレクト先を修正
+        return "redirect:/foods"; // リダイレクト先を修正
     }
 
 }
