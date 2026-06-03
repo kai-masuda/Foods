@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.entity.Category;
 import com.example.entity.Food;
@@ -72,12 +73,36 @@ public class FoodController {
         return "redirect:/foods";
     }
     
-    // 6. 削除の実行 (URL: POST /foods/{id}/delete)
+    // 6. 数量を指定して削除・消費の実行
     @PostMapping("/{id}/delete") 
-    public String destroy(@PathVariable Long id) {
-        foodService.deleteFood(id); 
+    public String destroy(@PathVariable Long id, @RequestParam(name = "reduceAmount") Integer reduceAmount) {
+        // 1. 対象の食材データを取得
+        Food food = foodService.getFoodById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
+        
+        // 2. 現在の量を文字列から取得
+        String currentAmountStr = food.getAmount();
+        
+        try {
+            // 文字列を一度整数（Integer）に変換を試みる
+            int currentAmountInt = Integer.parseInt(currentAmountStr);
+            int newAmount = currentAmountInt - reduceAmount;
+            
+            if (newAmount <= 0) {
+                foodService.deleteFood(id); // 0以下なら削除
+            } else {
+                food.setAmount(String.valueOf(newAmount)); // 残るなら文字に戻して保存
+                foodService.saveFood(food);
+            }
+        } catch (NumberFormatException e) {
+            // 【対策】「1/4」や「半分」など、数値に変換できない文字列が入っていた場合
+            // 引き算ができないため、消費ボタンが押されたらそのままデータを完全に削除します
+            foodService.deleteFood(id);
+        }
+        
         return "redirect:/foods";
     }
+
 
 }
 
