@@ -35,7 +35,10 @@ public class Category {
     @Size(max = 255)
     private String unit;
     
+<<<<<<< HEAD
     // @OneToManyで1つのカテゴリに対して複数の食材が紐づく(1対多)
+=======
+>>>>>>> branch 'master' of https://github.com/kai-masuda/Foods.git
     @OneToMany(mappedBy = "category")
     private List<Food> foods;
 
