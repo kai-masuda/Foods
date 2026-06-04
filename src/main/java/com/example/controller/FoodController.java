@@ -26,7 +26,7 @@ public class FoodController {
     @Autowired
     private com.example.service.CategoryService categoryService;
     
-    // 一覧表示 (URL: GET /foods)  // 【修正】パラメータを受け取れるように変更
+    // 一覧表示 (URL: GET /foods)
     @GetMapping
     public String index(
         // ◆追加：検索キーワード（最初はなくてもいいように、 required = false）を受け取る
@@ -37,8 +37,6 @@ public class FoodController {
         @RequestParam(defaultValue = "asc") String direction,
         Model model) {
         
-        // ソートオブジェクトの組み立て
-        // IgnoreCase: 大文字と小文字の違いを無視
         Sort sortOrder = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sort).descending() : Sort.by(sort).ascending();
         
@@ -56,7 +54,6 @@ public class FoodController {
         
         model.addAttribute("foods", foods);
         
-        // Thymeleafで並び替えリンクや上下表示を制御するための情報を渡す
         model.addAttribute("currentSort", sort);
         model.addAttribute("currentDirection", direction);
         model.addAttribute("reverseDirection", direction.equals("asc") ? "desc" : "asc");
@@ -77,7 +74,13 @@ public class FoodController {
     
     // 登録実行 (URL: POST /foods)
     @PostMapping
-    public String store(@ModelAttribute Food food) {
+    public String store(
+            @ModelAttribute Food food, 
+            @RequestParam("categoryInputName") String categoryInputName,
+            @RequestParam(value = "newCategoryUnit", required = false) String newCategoryUnit) {
+        
+        // メソッド名を「handleCategory」に統一して呼び出す
+        handleCategory(food, categoryInputName, newCategoryUnit);
         foodService.saveFood(food); 
         return "redirect:/foods";
     }
@@ -85,7 +88,6 @@ public class FoodController {
     // 4. 編集画面の表示 (URL: GET /foods/{id}/edit)
     @GetMapping("/{id}/edit")
     public String editForm(@PathVariable Long id, Model model) {
-        // 【修正】OptionalからFoodオブジェクトを安全に取り出す記述に変更しました
         Food food = foodService.getFoodById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
         model.addAttribute("food", food);
@@ -98,8 +100,15 @@ public class FoodController {
     
     // 5. 更新の実行 (URL: POST /foods/{id}/update)
     @PostMapping("/{id}/update")
-    public String update(@PathVariable Long id, @ModelAttribute Food food) {
+    public String update(
+            @PathVariable Long id, 
+            @ModelAttribute Food food, 
+            @RequestParam("categoryInputName") String categoryInputName,
+            @RequestParam(value = "newCategoryUnit", required = false) String newCategoryUnit) {
+        
         food.setId(id); 
+        // 【修正】ここも「handleCategory」に名前を統一して呼び出す
+        handleCategory(food, categoryInputName, newCategoryUnit);
         foodService.saveFood(food); 
         return "redirect:/foods";
     }
@@ -111,5 +120,38 @@ public class FoodController {
         return "redirect:/foods";
     }
 
+    // 【名称変更】呼び出し元と名前を完全に一致させました
+    private void handleCategory(Food food, String categoryName, String unit) {
+        if (categoryName == null || categoryName.trim().isEmpty()) {
+            return;
+        }
+        String trimmedName = categoryName.trim();
+
+        // 既存の全カテゴリを取得して、名前が一致するデータがあるか探す
+        List<Category> allCategories = categoryService.getAllCategories();
+        Category targetCategory = allCategories.stream()
+                .filter(c -> c.getCategoryName().equals(trimmedName))
+                .findFirst()
+                .orElse(null);
+
+        // 一致するものがなければ、新しいカテゴリとしてデータベースに保存
+        if (targetCategory == null) {
+            Category newCategory = new Category();
+            newCategory.setCategoryName(trimmedName);
+            
+            if (unit != null && !unit.trim().isEmpty()) {
+                newCategory.setUnit(unit.trim());
+            } else {
+                newCategory.setUnit("個");
+            }
+            
+            targetCategory = categoryService.saveCategory(newCategory);
+        }
+
+        // 確定したカテゴリをFoodに紐付ける
+        food.setCategory(targetCategory);
+    }
+
 }
+
 

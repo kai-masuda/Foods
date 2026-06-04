@@ -31,14 +31,25 @@
                         <input type="date" th:field="*{taste_limit}" class="form-control" required>
                     </div>
                     
-                    <!-- カテゴリ選択 -->
+                    <!-- カテゴリ入力（リストから選択 or 直接入力） -->
                     <div class="mb-4">
-                        <label for="category" class="form-label">カテゴリ</label>
-                        <select th:field="*{category}" class="form-select" required>
-                            <option value="">選択してください</option>
-                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName + ' (' + cat.unit + ')'}"></option>
-                        </select>
+                        <label for="categoryInput" class="form-label">カテゴリ</label>
+                        <!-- 入力フィールド。list属性で下のdatalistと紐付けます -->
+                        <input type="text" name="categoryInputName" id="categoryInput" class="form-control" list="categoryOptions" placeholder="選択するか、新しく入力してください" required>
+                        
+                        <!-- 候補リスト（画面には直接表示されず、入力時にドロップダウンで出ます） -->
+                        <datalist id="categoryOptions">
+                            <option th:each="cat : ${categories}" th:value="${cat.categoryName}" th:data-unit="${cat.unit}"></option>
+                        </datalist>
+                        
+                        <!-- 単位の入力欄（新規カテゴリ登録時のために必要です） -->
+                        <div id="unitInputArea" class="mt-2" style="display: none;">
+                            <label for="newCategoryUnit" class="form-label small text-muted">新規カテゴリの単位</label>
+                            <input type="text" name="newCategoryUnit" id="newCategoryUnit" class="form-control form-control-sm" placeholder="例: 個、パック、袋">
+                        </div>
                     </div>
+
+
                     
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary w-100">登録する</button>
@@ -48,5 +59,33 @@
             </div>
         </div>
     </div>
+    <script>
+    document.getElementById('categoryInput').addEventListener('input', function() {
+        const inputValue = this.value.trim();
+        const options = document.querySelectorAll('#categoryOptions option');
+        const unitArea = document.getElementById('unitInputArea');
+        const unitInput = document.getElementById('newCategoryUnit');
+        
+        // 入力された文字が、既存の選択肢にあるかチェック
+        let isExisting = false;
+        options.forEach(opt => {
+            if (opt.value === inputValue) {
+                isExisting = true;
+            }
+        });
+
+        if (isExisting || inputValue === '') {
+            // 既存のカテゴリなら単位入力は不要（非表示にしてクリア）
+            unitArea.style.display = 'none';
+            unitInput.value = '';
+            unitInput.removeAttribute('required');
+        } else {
+            // 新規入力なら単位の入力を求める（表示して必須にする）
+            unitArea.style.display = 'block';
+            unitInput.setAttribute('required', 'required');
+        }
+    });
+    </script>
+
 </body>
 </html>
