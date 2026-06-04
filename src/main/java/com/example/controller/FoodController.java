@@ -29,19 +29,31 @@ public class FoodController {
     // 一覧表示 (URL: GET /foods)  // 【修正】パラメータを受け取れるように変更
     @GetMapping
     public String index(
-            // デフォルトは賞味期限順に設定。sort: 列の名前を保存するための変数
-            @RequestParam(defaultValue = "taste_limit") String sort,
-            // デフォルトは昇順に設定。direction: 並び替えの方向を保存するための変数
-            @RequestParam(defaultValue = "asc") String direction,
-            Model model) {
+        // ◆追加：検索キーワード（最初はなくてもいいように、 required = false）を受け取る
+        @RequestParam(name = "keyword", required = false) String keyword,
+        // デフォルトは賞味期限順に設定。sort: 列の名前を保存するための変数
+        @RequestParam(defaultValue = "taste_limit") String sort,
+        // デフォルトは昇順に設定。direction: 並び替えの方向を保存するための変数
+        @RequestParam(defaultValue = "asc") String direction,
+        Model model) {
         
         // ソートオブジェクトの組み立て
         // IgnoreCase: 大文字と小文字の違いを無視
         Sort sortOrder = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sort).descending() : Sort.by(sort).ascending();
         
+        //◆修正：キーワードの有無で呼び出すサービス切り替え
+        List<Food> foods;
+        if(keyword != null && !keyword.isBlank()) {
+            // キーワードがある場合、絞り込み・並べ替え
+            foods = foodService.searchByFoodName(keyword, sortOrder);
+        } else {
+            // キーワードがない場合、引数にソート条件を渡して、並び替え済みのデータを取得する
+            foods = foodService.getAllFoods(sortOrder);
+        }
+        
         // 引数にソート条件を渡して、並び替え済みのデータを取得する
-        List<Food> foods = foodService.getAllFoods(sortOrder);
+        
         model.addAttribute("foods", foods);
         
         // Thymeleafで並び替えリンクや上下表示を制御するための情報を渡す

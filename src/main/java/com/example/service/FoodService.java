@@ -41,10 +41,10 @@ public class FoodService {
     }
     
     //食材のキーワード検索機能
-    public List<Food> searchByFoodName(String keyword) {
+    public List<Food> searchByFoodName(String keyword, Sort sort) {
         if(keyword == null || keyword.isBlank()) {
             return foodRepository.findAll();
         }
-        return foodRepository.findByFoodNameContaining(keyword);
+        return foodRepository.findByFoodNameContaining(keyword, sort);
     }
 }
