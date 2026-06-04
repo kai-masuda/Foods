@@ -20,7 +20,7 @@ public class FoodService {
     
     // 食材の一覧取得  //【修正】引数sort追加
     public List<Food> getAllFoods(Sort sort) {
-        return foodRepository.findAll();
+        return foodRepository.findAll(sort);
     }
     
     // 食材を1件取得

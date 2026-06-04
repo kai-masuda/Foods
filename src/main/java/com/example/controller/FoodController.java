@@ -30,9 +30,10 @@ public class FoodController {
     @GetMapping
     public String index(
         // ◆追加：検索キーワード（最初はなくてもいいように、 required = false）を受け取る
-        @RequestParam(name = "keyword", required = false) String keyword,
+        //【修正】デフォルトでnullになるように変更
+        @RequestParam(name = "keyword", required = false, defaultValue = "") String keyword,
         // デフォルトは賞味期限順に設定。sort: 列の名前を保存するための変数
-        @RequestParam(defaultValue = "taste_limit") String sort,
+        @RequestParam(defaultValue = "id") String sort,
         // デフォルトは昇順に設定。direction: 並び替えの方向を保存するための変数
         @RequestParam(defaultValue = "asc") String direction,
         Model model) {
