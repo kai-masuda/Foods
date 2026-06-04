@@ -45,6 +45,6 @@ public class FoodService {
         if(keyword == null || keyword.isBlank()) {
             return foodRepository.findAll();
         }
-        return foodRepository.findByFood_NameContaining(keyword, sort);
+        return foodRepository.findByFoodNameContaining(keyword, sort);
     }
 }
