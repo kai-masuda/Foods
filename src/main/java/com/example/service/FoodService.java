@@ -18,7 +18,7 @@ public class FoodService {
     @Autowired
     private FoodRepository foodRepository;
     
- // 食材の一覧取得  //【修正】引数sort追加
+    // 食材の一覧取得  //【修正】引数sort追加
     public List<Food> getAllFoods(Sort sort) {
         return foodRepository.findAll();
     }
@@ -41,10 +41,10 @@ public class FoodService {
     }
     
     //食材のキーワード検索機能
-    public List<Food> searchByFoodName(String keyword) {
+    public List<Food> searchByFoodName(String keyword, Sort sort) {
         if(keyword == null || keyword.isBlank()) {
             return foodRepository.findAll();
         }
-        return foodRepository.findByFoodNameContaining(keyword);
+        return foodRepository.findByFoodNameContaining(keyword, sort);
     }
 }
