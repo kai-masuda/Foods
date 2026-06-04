@@ -10,5 +10,5 @@ import com.example.entity.Food;
 public interface FoodRepository extends JpaRepository<Food, Long>{
     
     List<Food> findByCategoryId(Long categoryId);
-    List<Food> findByFood_NameContaining(String keyword, Sort sort);
+    List<Food> findByFoodNameContaining(String keyword, Sort sort);
 }
