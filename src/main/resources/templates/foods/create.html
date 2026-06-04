@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <title>食材登録</title>
-    <!-- 作成した最低限のローカルCSSを読み込みます -->
         <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -37,7 +36,7 @@
                         <!-- 入力フィールド。list属性で下のdatalistと紐付けます -->
                         <input type="text" name="categoryInputName" id="categoryInput" class="form-control" list="categoryOptions" placeholder="選択するか、新しく入力してください" required>
                         
-                        <!-- 候補リスト（画面には直接表示されず、入力時にドロップダウンで出ます） -->
+                        <!-- 候補リストドロップダウン） -->
                         <datalist id="categoryOptions">
                             <option th:each="cat : ${categories}" th:value="${cat.categoryName}" th:data-unit="${cat.unit}"></option>
                         </datalist>
