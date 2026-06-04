@@ -18,9 +18,9 @@ public class FoodService {
     @Autowired
     private FoodRepository foodRepository;
     
- // 食材の一覧取得
-    public List<Food> getAllFoods() {
-        return foodRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+ // 食材の一覧取得  //【修正】引数sort追加
+    public List<Food> getAllFoods(Sort sort) {
+        return foodRepository.findAll();
     }
     
     // 食材を1件取得
