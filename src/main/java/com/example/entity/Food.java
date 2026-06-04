@@ -38,10 +38,8 @@ public class Food {
     private String foodName;
     
     @Column(nullable = false)
-
-    @NotBlank(message = "量は必須です")
-    @Size(max = 255)
-    private String amount; // Integerだと1/4などが扱えなくなるためString型
+    @jakarta.validation.constraints.Min(value = 1, message = "量は1以上で入力してください") // 数値用の必須・最小値チェック
+    private int amount;
 
     
     @Column(nullable = false)

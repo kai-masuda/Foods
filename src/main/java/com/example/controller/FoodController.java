@@ -113,12 +113,31 @@ public class FoodController {
         return "redirect:/foods";
     }
     
-    // 6. 削除の実行 (URL: POST /foods/{id}/delete)
+    // 6. 削除・消費の実行 (URL: POST /foods/{id}/delete)
     @PostMapping("/{id}/delete") 
-    public String destroy(@PathVariable Long id) {
-        foodService.deleteFood(id); 
+    public String destroy(
+            @PathVariable Long id, 
+            @RequestParam("reduceAmount") int reduceAmount) { // ◆追加：画面から消費する数量を受け取る
+        
+        // 1. 対象の食材データをデータベースから取得
+        Food food = foodService.getFoodById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
+        
+        // 2. 現在の数量から、消費する数量を引き算する
+        int newAmount = food.getAmount() - reduceAmount;
+        
+        if (newAmount > 0) {
+            // 残量がある場合は、数量を更新して保存
+            food.setAmount(newAmount);
+            foodService.saveFood(food);
+        } else {
+            // 0以下になる場合は、データそのものをデータベースから削除
+            foodService.deleteFood(id); 
+        }
+        
         return "redirect:/foods";
     }
+
 
     //カテゴリの追加
     private void handleCategory(Food food, String categoryName, String unit) {
