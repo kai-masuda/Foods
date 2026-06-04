@@ -11,6 +11,26 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h2">食材一覧</h1>
+            
+            <!--【修正】並び替え機能追加-->
+            <form th:action="@{/foods}" method="get" class="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm border">
+                <span class="small fw-bold text-muted ms-1">並び替え:</span>
+                
+                <select name="sort" class="form-select form-select-sm" style="width: 150px;">
+                    <option value="taste_limit" th:selected="${currentSort == 'taste_limit'}">賞味・消費期限</option>
+                    <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
+                    <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
+                    <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
+                </select>
+                
+                <select name="direction" class="form-select form-select-sm" style="width: 110px;">
+                     <option value="asc" th:selected="${currentDirection == 'asc'}">昇順(▲)</option>
+                     <option value="desc" th:selected="${currentDirection == 'desc'}">降順(▼)</option>
+                </select>
+
+                <button type="submit" class="btn btn-sm btn-secondary px-3">実行</button>
+            </form>                
+            
             <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
         </div>
 
@@ -19,7 +39,7 @@
                 <table class="table table-striped table-hover align-middle mb-0">
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
+                            <th>ID </th>
                             <th>食材名</th>
                             <th>量</th>
                             <th>単位</th>
