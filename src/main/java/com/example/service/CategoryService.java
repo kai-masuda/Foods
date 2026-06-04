@@ -1,6 +1,5 @@
 package com.example.service;
 
-
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +18,11 @@ public class CategoryService {
     // カテゴリー一覧取得
     public List<Category> getAllCategories() {
         return categoryRepository.findAll(Sort.by(Sort.Direction.DESC, "id"));
+    }
+    
+    // 【追記】カテゴリーの保存
+    public Category saveCategory(Category category) {
+        return categoryRepository.save(category);
     }
     
 }
