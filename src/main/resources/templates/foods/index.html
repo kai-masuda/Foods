@@ -1,12 +1,12 @@
 <!DOCTYPE html>
-<!-- 【修正】www. を追加して正しいThymeleafのURLに修正しました -->
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>食材一覧</title>
-    <!-- 作成した最低限のローカルCSSを読み込みます -->
-        <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -25,7 +25,6 @@
                             <th>単位</th>
                             <th>賞味・消費期限</th>
                             <th>カテゴリ</th>
-                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,12 +37,16 @@
                             <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <a th:href="@{/foods/{id}/edit(id=${food.id})}" class="btn btn-sm btn-warning">編集</a>
-                                    
+                                    <a th:href="@{/foods/{id}/edit(id=${food.id})}"
+                                        class="btn btn-sm btn-warning">編集</a>
+
                                     <!-- 【修正】数量を指定して消費（削除）するフォームに変更 -->
-                                    <form th:action="@{/foods/{id}/delete(id=${food.id})}" method="post" class="d-flex gap-1 align-items-center">
-                                        <input type="number" name="reduceAmount" class="form-control form-control-sm" style="width: 70px;" min="1" th:max="${food.amount}" value="1" required>
-                                        <button type="submit" class="btn btn-sm btn-danger" style="white-space: nowrap;">消費</button>
+                                    <form th:action="@{/foods/{id}/delete(id=${food.id})}" method="post"
+                                        class="d-flex gap-1 align-items-center">
+                                        <input type="number" name="reduceAmount" class="form-control form-control-sm"
+                                            style="width: 70px;" min="1" th:max="${food.amount}" value="1" required>
+                                        <button type="submit" class="btn btn-sm btn-danger"
+                                            style="white-space: nowrap;">消費</button>
                                     </form>
                                 </div>
                             </td>
@@ -57,4 +60,5 @@
         </div>
     </div>
 </body>
+
 </html>
