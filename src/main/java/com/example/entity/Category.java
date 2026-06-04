@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;         // 【追加】
 
 @Entity
-@Data
-@NoArgsConstructor
+@Data//ゲッターセッターを自動作成するアノテーション
+@NoArgsConstructor//コンストラクター自動生成
 @AllArgsConstructor
 public class Category {
     
