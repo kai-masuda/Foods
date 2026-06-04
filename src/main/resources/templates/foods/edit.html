@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <title>食材編集</title>
-    <!-- 作成した最低限のローカルCSSを読み込みます -->
         <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
 <body class="bg-light">
@@ -35,7 +34,6 @@
                     <!-- カテゴリ選択 -->
                     <div class="mb-4">
                         <label for="category" class="form-label">カテゴリ</label>
-                        <!-- 【修正】エラーの原因だった th:selected を削除しました。th:field の効果で自動選択されます -->
                         <select th:field="*{category}" class="form-select" required>
                             <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName + ' (' + cat.unit + ')'}"></option>
                         </select>
