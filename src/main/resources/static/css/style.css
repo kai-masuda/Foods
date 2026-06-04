@@ -14,7 +14,7 @@ body {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-.d-flex { display: flex; justify-content: space-between; align-items: center; mb-4; }
+.d-flex { display: flex; justify-content: space-between; align-items: center; }
 .mb-3 { margin-bottom: 15px; }
 .mb-4 { margin-bottom: 20px; }
 
