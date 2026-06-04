@@ -107,7 +107,7 @@ public class FoodController {
             @RequestParam(value = "newCategoryUnit", required = false) String newCategoryUnit) {
         
         food.setId(id); 
-        // 【修正】ここも「handleCategory」に名前を統一して呼び出す
+
         handleCategory(food, categoryInputName, newCategoryUnit);
         foodService.saveFood(food); 
         return "redirect:/foods";
@@ -120,7 +120,7 @@ public class FoodController {
         return "redirect:/foods";
     }
 
-    // 【名称変更】呼び出し元と名前を完全に一致させました
+    //カテゴリの追加
     private void handleCategory(Food food, String categoryName, String unit) {
         if (categoryName == null || categoryName.trim().isEmpty()) {
             return;
