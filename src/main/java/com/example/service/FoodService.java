@@ -18,7 +18,7 @@ public class FoodService {
     @Autowired
     private FoodRepository foodRepository;
     
- // 食材の一覧取得  //【修正】引数sort追加
+    // 食材の一覧取得  //【修正】引数sort追加
     public List<Food> getAllFoods(Sort sort) {
         return foodRepository.findAll();
     }
