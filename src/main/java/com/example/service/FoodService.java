@@ -39,4 +39,12 @@ public class FoodService {
     public void deleteFood(Long id) {
         foodRepository.deleteById(id);
     }
+    
+    //食材のキーワード検索機能
+    public List<Food> searchByFoodName(String keyword) {
+        if(keyword == null || keyword.isBlank()) {
+            return foodRepository.findAll();
+        }
+        return foodRepository.findByFoodNameContaining(keyword);
+    }
 }
