@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://thymeleaf.org">
 
 <head>
     <meta charset="UTF-8">
@@ -40,7 +40,7 @@
 
                     <div class="col-md-2">
                         <select name="sort" class="form-select">
-                            <option value="taste_limit" th:selected="${currentSort == 'taste_limit'}">賞味・消費期限</option>
+                            <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限</option>
                             <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
                             <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
                             <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
@@ -74,6 +74,7 @@
                             <th>単位</th>
                             <th>賞味・消費期限</th>
                             <th>カテゴリ</th>
+                            <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -82,15 +83,20 @@
                             <td th:text="${food.foodName}">トマト</td>
                             <td th:text="${food.amount}">3</td>
                             <td th:text="${food.category != null ? food.category.unit : ''}">個</td>
-                            <td th:text="${food.tasteLimit}">2026-06-10</td>
+                            
+                            <!-- 賞味・消費期限の文字色と太字をインラインCSSで確実に適用 -->
+                            <td th:text="${food.tasteLimit}"
+                                th:style="${food.isExpired()} ? 'color: #dc3545; font-weight: bold;' : (${food.isUrgent()} ? 'color: #fd7e14; font-weight: bold;' : '')">
+                                2026-06-05
+                            </td>
+                            
                             <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
                             <td>
                                 <div class="d-flex gap-2">
                                     <a th:href="@{/foods/{id}/edit(id=${food.id})}"
                                         class="btn btn-sm btn-warning">編集</a>
 
-                                    <!-- 【修正】数量を指定して消費（削除）するフォームに変更 -->
-                                    <!--【修正】最小値を0.1に変更し、ste="any"で値を自由に入力できるように変更-->
+                                    <!-- 数量を指定して消費（削除）するフォーム -->
                                     <form th:action="@{/foods/{id}/delete(id=${food.id})}" method="post"
                                         class="d-flex gap-1 align-items-center">
                                         <input type="number" name="reduceAmount" class="form-control form-control-sm"

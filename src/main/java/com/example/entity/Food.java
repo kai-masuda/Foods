@@ -76,6 +76,21 @@ public class Food {
     public void onPreUpdate() {
         setUpdated_at(LocalDateTime.now());
     }
+    
+    //【追加】期限が切れているか判定するメソッド（今日より前）
+    public boolean isExpired() {
+        if (this.tasteLimit == null) return false;
+        return this.tasteLimit.isBefore(LocalDate.now());
+    }
+
+    //【追加】期限が近いか判定するメソッド（今日を含めて3日以内）
+    public boolean isUrgent() {
+        if (this.tasteLimit == null) return false;
+        LocalDate today = LocalDate.now();
+        // 今日以降、かつ、今日から3日後以内であればtrue
+        return !this.tasteLimit.isBefore(today) && !this.tasteLimit.isAfter(today.plusDays(3));
+    }
+
 }
 
 
