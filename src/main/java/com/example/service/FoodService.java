@@ -40,11 +40,23 @@ public class FoodService {
         foodRepository.deleteById(id);
     }
     
-    //食材のキーワード検索機能
-    public List<Food> searchByFoodName(String keyword, Sort sort) {
-        if(keyword == null || keyword.isBlank()) {
-            return foodRepository.findAll();
+    //検索・絞り込み統合
+    public List<Food> serchFoods(String keyword, Long categoryId, Sort sort){
+        boolean hasKeyword = keyword != null && !keyword.isBlank();
+        boolean hasCategory = categoryId != null;
+        
+        //キーワード、カテゴリ絞り込みあり
+        if(hasKeyword && hasCategory) {
+            return foodRepository.searchByNameAndCategoryId(keyword, categoryId, sort);
+        //キーワードあり
+        } else if(hasKeyword){
+            return foodRepository.searchByName(keyword, sort);
+        //カテゴリ絞り込みあり
+        } else if(hasCategory) {
+            return foodRepository.findByCategoryId(categoryId, sort);
+        //絞り込みなし
+        } else {
+            return foodRepository.findAll(sort);
         }
-        return foodRepository.searchByName(keyword, sort);
     }
 }
