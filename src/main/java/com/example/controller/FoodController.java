@@ -36,24 +36,25 @@ public class FoodController {
         @RequestParam(defaultValue = "id") String sort,
         // デフォルトは昇順に設定。direction: 並び替えの方向を保存するための変数
         @RequestParam(defaultValue = "asc") String direction,
+        //◆追加：絞り込み（カテゴリID）
+        @RequestParam(required = false) Long categoryId,
         Model model) {
+
         
         Sort sortOrder = direction.equalsIgnoreCase("desc") ?
                 Sort.by(sort).descending() : Sort.by(sort).ascending();
         
-        //◆修正：キーワードの有無で呼び出すサービス切り替え
-        List<Food> foods;
-        if(keyword != null && !keyword.isBlank()) {
-            // キーワードがある場合、絞り込み・並べ替え
-            foods = foodService.searchByFoodName(keyword, sortOrder);
-        } else {
-            // キーワードがない場合、引数にソート条件を渡して、並び替え済みのデータを取得する
-            foods = foodService.getAllFoods(sortOrder);
-        }
-        
-        // 引数にソート条件を渡して、並び替え済みのデータを取得する
+        //一覧表示・絞り込み・検索機能統合メソッド呼び出し
+        List<Food> foods = foodService.serchFoods(keyword, categoryId, sortOrder);
         
         model.addAttribute("foods", foods);
+        
+        //HTML側で、今何が選択されているかを維持・表示する
+        model.addAttribute("currentKeyword", keyword);
+        model.addAttribute("currentCategoryId", categoryId);
+        
+        //カテゴリを全権取得
+        model.addAttribute("categories", categoryService.getAllCategories());
         
         model.addAttribute("currentSort", sort);
         model.addAttribute("currentDirection", direction);

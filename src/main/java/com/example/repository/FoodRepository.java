@@ -11,7 +11,9 @@ import com.example.entity.Food;
 
 public interface FoodRepository extends JpaRepository<Food, Long>{
     
-    List<Food> findByCategoryId(Long categoryId);
+    List<Food> findByCategoryId(Long categoryId, Sort sort);
     @Query("SELECT f FROM Food f WHERE f.foodName LIKE %:keyword%")
     List<Food> searchByName(@Param("keyword") String keyword, Sort sort);
+    @Query("SELECT f FROM Food f WHERE f.foodName LIKE %:keyword% AND f.category.id = :categoryId")
+    List<Food> searchByNameAndCategoryId(@Param("keyword") String keyword, @Param("categoryId") Long categoryId, Sort sort);
 }

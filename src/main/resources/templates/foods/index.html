@@ -11,45 +11,58 @@
     <div class="container mt-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h2">食材一覧</h1>
-            
-            <!--【修正】並び替え機能追加-->
-            <form th:action="@{/foods}" method="get" class="d-flex gap-2 align-items-center bg-white p-2 rounded shadow-sm border">
-                <span class="small fw-bold text-muted ms-1">並び替え:</span>
-                
-                <select name="sort" class="form-select form-select-sm" style="width: 150px;">
-                    <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限</option>
-                    <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
-                    <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
-                    <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
-                </select>
-                
-                <select name="direction" class="form-select form-select-sm" style="width: 110px;">
-                     <option value="asc" th:selected="${currentDirection == 'asc'}">昇順(▲)</option>
-                     <option value="desc" th:selected="${currentDirection == 'desc'}">降順(▼)</option>
-                </select>
-
-                <button type="submit" class="btn btn-sm btn-secondary px-3">実行</button>
-            </form>                
-            
             <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
         </div>
 
-        <div class="card shadow-sm">
+        <div class="card shadow-sm mb-4">
             <div class="card-body">
-                <form th:action="@{/foods}" method ="get" class="row g-3 align-items-center">
-                    <div class="col-md-8 col-sm-9">
+                <form th:action="@{/foods}" method="get" class="row g-3 align-items-center">
+                    
+                    <div class="col-md-4">
                         <div class="input-group">
                             <span class="input-group-text">食材名</span>
-                            <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="検索したいキーワードを入力してください">
+                            <input type="text" name="keyword" th:value="${currentKeyword}" class="form-control" placeholder="キーワードを入力">
                         </div>
                     </div>
-                    <div class="col-md-4 col-sm-3 d-flex gap-2">
+
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <span class="input-group-text">カテゴリ</span>
+                            <select name="categoryId" class="form-select">
+                                <option value="">すべて</option>
+                                <option th:each="cat : ${categories}" 
+                                        th:value="${cat.id}" 
+                                        th:text="${cat.categoryName}"
+                                        th:selected="${cat.id == currentCategoryId}">野菜</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select name="sort" class="form-select">
+                            <option value="taste_limit" th:selected="${currentSort == 'taste_limit'}">賞味・消費期限</option>
+                            <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
+                            <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
+                            <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-1">
+                        <select name="direction" class="form-select">
+                             <option value="asc" th:selected="${currentDirection == 'asc'}">昇順</option>
+                             <option value="desc" th:selected="${currentDirection == 'desc'}">降順</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex gap-2">
                         <button type="submit" class="btn btn-success w-100">検索</button>
                         <a th:href="@{/foods}" class="btn btn-secondary">クリア</a>
                     </div>
+
                 </form>
             </div>
         </div>
+
         <div class="card shadow-sm">
             <div class="card-body">
                 <table class="table table-striped table-hover align-middle mb-0">
