@@ -22,13 +22,14 @@
                     <!-- 数量 -->
                     <div class="mb-3">
                         <label for="amount" class="form-label">量</label>
-                        <input type="number" th:field="*{amount}" class="form-control" min="1" required>
+                        <!--【修正】step="any"を追加することでどんな少数でも自由に入力できるように変更-->
+                        <input type="number" th:field="*{amount}" class="form-control" step="any" min="0.1" required>
                     </div>
                     
                     <!-- 賞味期限 -->
                     <div class="mb-3">
-                        <label for="taste_limit" class="form-label">賞味・消費期限</label>
-                        <input type="date" th:field="*{taste_limit}" class="form-control" required>
+                        <label for="tasteLimit" class="form-label">賞味・消費期限</label>
+                        <input type="date" th:field="*{tasteLimit}" class="form-control" required>
                     </div>
                     
                     <!-- カテゴリ選択 -->

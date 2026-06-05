@@ -38,12 +38,14 @@ public class Food {
     private String foodName;
     
     @Column(nullable = false)
-    @jakarta.validation.constraints.Min(value = 1, message = "量は1以上で入力してください") // 数値用の必須・最小値チェック
-    private int amount;
+    //【修正】MinからCecimalMinに変更し、最小値を1から0.1に変更
+    @jakarta.validation.constraints.DecimalMin(value = "0.1", message = "量は0.1以上で入力してください") // 数値用の必須・最小値チェック
+    //【修正】int→double型に変更
+    private double amount;
 
-    
+    //【修正】taste_limit→tasteLimitに変更
     @Column(nullable = false)
-    private LocalDate taste_limit;
+    private LocalDate tasteLimit;
     
 
     // @ManyToOneで複数の食材が1つのカテゴリに属する(多対1)
