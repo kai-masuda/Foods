@@ -34,7 +34,7 @@ public class Food {
     
     @Column(length = 255, nullable = false)
     @NotBlank(message = "食材名は必須です")
-    @Size(max = 255)
+    @Size(max = 20)
     private String foodName;
     
     @Column(nullable = false)

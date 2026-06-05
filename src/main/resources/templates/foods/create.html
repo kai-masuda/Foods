@@ -1,56 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>食材登録</title>
-        <link th:href="@{/css/style.css}" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <div class="container mt-5" style="max-width: 600px;">
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h1 class="h3 card-title mb-4">食材の新規登録</h1>
-                
+
                 <form th:action="@{/foods}" th:object="${food}" method="post">
                     <!-- 食材名 -->
                     <div class="mb-3">
                         <label for="foodName" class="form-label">食材名</label>
-                        <input type="text" th:field="*{foodName}" class="form-control" required>
+                        <input type="text" th:field="*{foodName}" class="form-control" id="foodNameInput"
+                            th:pattern="${'.{1,' + maxFoodNameLength + '}'}" required
+                            th:oninput="|checkFoodNameLength(this, ${maxFoodNameLength})|"
+                            th:oninvalid="|checkFoodNameLength(this, ${maxFoodNameLength})|">
                     </div>
-                    
+
                     <!-- 数量 -->
                     <div class="mb-3">
                         <label for="amount" class="form-label">量</label>
                         <!--【修正】step="any"を追加することでどんな少数でも自由に入力できるように変更-->
                         <input type="number" th:field="*{amount}" class="form-control" step="any" min="0.1" required>
                     </div>
-                    
+
                     <!-- 賞味期限 -->
                     <div class="mb-3">
                         <label for="tasteLimit" class="form-label">賞味・消費期限</label>
                         <input type="date" th:field="*{tasteLimit}" class="form-control" required>
                     </div>
-                    
+
                     <!-- カテゴリ入力（リストから選択 or 直接入力） -->
                     <div class="mb-4">
                         <label for="categoryInput" class="form-label">カテゴリ</label>
                         <!-- 入力フィールド。list属性で下のdatalistと紐付けます -->
-                        <input type="text" name="categoryInputName" id="categoryInput" class="form-control" list="categoryOptions" placeholder="選択するか、新しく入力してください" required>
-                        
+                        <input type="text" name="categoryInputName" id="categoryInput" class="form-control"
+                            list="categoryOptions" placeholder="選択するか、新しく入力してください" required>
+
                         <!-- 候補リストドロップダウン） -->
                         <datalist id="categoryOptions">
-                            <option th:each="cat : ${categories}" th:value="${cat.categoryName}" th:data-unit="${cat.unit}"></option>
+                            <option th:each="cat : ${categories}" th:value="${cat.categoryName}"
+                                th:data-unit="${cat.unit}"></option>
                         </datalist>
-                        
+
                         <!-- 単位の入力欄（新規カテゴリ登録時のために必要です） -->
                         <div id="unitInputArea" class="mt-2" style="display: none;">
                             <label for="newCategoryUnit" class="form-label small text-muted">新規カテゴリの単位</label>
-                            <input type="text" name="newCategoryUnit" id="newCategoryUnit" class="form-control form-control-sm" placeholder="例: 個、パック、袋">
+                            <input type="text" name="newCategoryUnit" id="newCategoryUnit"
+                                class="form-control form-control-sm" placeholder="例: 個、パック、袋">
                         </div>
                     </div>
 
 
-                    
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-primary w-100">登録する</button>
                         <a th:href="@{/foods}" class="btn btn-secondary w-100">戻る</a>
@@ -60,32 +68,47 @@
         </div>
     </div>
     <script>
-    document.getElementById('categoryInput').addEventListener('input', function() {
-        const inputValue = this.value.trim();
-        const options = document.querySelectorAll('#categoryOptions option');
-        const unitArea = document.getElementById('unitInputArea');
-        const unitInput = document.getElementById('newCategoryUnit');
-        
-        // 入力された文字が、既存の選択肢にあるかチェック
-        let isExisting = false;
-        options.forEach(opt => {
-            if (opt.value === inputValue) {
-                isExisting = true;
+        // 💡 第二引数として最大文字数を受け取れるようにします
+        function checkFoodNameLength(input, maxLength) {
+            if (input.validity.valueMissing) {
+                input.setCustomValidity("このフィールドに入力してください。");
+            }
+            // 💡 patternに違反（文字数オーバー）しているとき
+            else if (input.validity.patternMismatch) {
+                // 💡 受け取った数値をメッセージに動的に埋め込みます
+                input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
+            }
+            else {
+                input.setCustomValidity("");
+            }
+        }
+
+        // --- 以下は既存のカテゴリ用の処理（そのまま残しています） ---
+        document.getElementById('categoryInput').addEventListener('input', function () {
+            const inputValue = this.value.trim();
+            const options = document.querySelectorAll('#categoryOptions option');
+            const unitArea = document.getElementById('unitInputArea');
+            const unitInput = document.getElementById('newCategoryUnit');
+
+            let isExisting = false;
+            options.forEach(opt => {
+                if (opt.value === inputValue) {
+                    isExisting = true;
+                }
+            });
+
+            if (isExisting || inputValue === '') {
+                unitArea.style.display = 'none';
+                unitInput.value = '';
+                unitInput.removeAttribute('required');
+            } else {
+                unitArea.style.display = 'block';
+                unitInput.setAttribute('required', 'required');
             }
         });
-
-        if (isExisting || inputValue === '') {
-            // 既存のカテゴリなら単位入力は不要（非表示にしてクリア）
-            unitArea.style.display = 'none';
-            unitInput.value = '';
-            unitInput.removeAttribute('required');
-        } else {
-            // 新規入力なら単位の入力を求める（表示して必須にする）
-            unitArea.style.display = 'block';
-            unitInput.setAttribute('required', 'required');
-        }
-    });
     </script>
 
+
 </body>
+
 </html>
