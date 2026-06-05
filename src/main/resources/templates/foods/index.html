@@ -84,9 +84,8 @@
                             <td th:text="${food.amount}">3</td>
                             <td th:text="${food.category != null ? food.category.unit : ''}">個</td>
                             
-                            <!-- 賞味・消費期限の文字色と太字をインラインCSSで確実に適用 -->
                             <td th:text="${food.tasteLimit}"
-                                th:style="${food.isExpired()} ? 'color: #dc3545; font-weight: bold;' : (${food.isUrgent()} ? 'color: #fd7e14; font-weight: bold;' : '')">
+                                th:classappend="${food.isExpired()} ? 'text-expired' : (${food.isUrgent()} ? 'text-urgent' : '')">
                                 2026-06-05
                             </td>
                             
