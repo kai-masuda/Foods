@@ -129,16 +129,44 @@ public class FoodController {
     public String update(
             @PathVariable Long id, 
             @ModelAttribute Food food, 
-            //【修正】"category"に修正
-            @RequestParam("category") String categoryInputName,
+            // 💡 【修正】@RequestParam("category") で、セレクトボックスから送信されるカテゴリIDを「String型」として受け取ります。
+            @RequestParam("category") String categoryIdStr,
             @RequestParam(value = "newCategoryUnit", required = false) String newCategoryUnit) {
         
-        food.setId(id); 
+        // 💡 1. データベースから「現在保存されている古い食材データ」を確実に1件取得
+        Food existingFood = foodService.getFoodById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
 
-        handleCategory(food, categoryInputName, newCategoryUnit);
-        foodService.saveFood(food); 
+        // 💡 2. 画面から入力された新しい値（名前・数量・期限）を、取得した古いデータに上書き
+        existingFood.setFoodName(food.getFoodName());
+        existingFood.setAmount(food.getAmount());
+        existingFood.setTasteLimit(food.getTasteLimit()); 
+
+        // 💡 3. セレクトボックスから送られてきたのはIDなので、データベースから対応する「カテゴリ名」を探し出す
+        String categoryName = "";
+        try {
+            Long selectedCategoryId = Long.parseLong(categoryIdStr);
+            Category selectedCategory = categoryService.getAllCategories().stream()
+                    .filter(c -> c.getId().equals(selectedCategoryId))
+                    .findFirst()
+                    .orElse(null);
+            
+            if (selectedCategory != null) {
+                categoryName = selectedCategory.getCategoryName(); // 名前を抽出！
+            }
+        } catch (NumberFormatException e) {
+            // 万が一数値変換に失敗した（文字列が直接送られてきた）場合は、そのまま文字列を使用
+            categoryName = categoryIdStr;
+        }
+
+        // 💡 4. 抽出した「カテゴリ名」を使って、既存の handleCategory メソッドに処理を流す
+        handleCategory(existingFood, categoryName, newCategoryUnit);
+        
+        // 💡 5. データベースに安全に上書き保存
+        foodService.saveFood(existingFood); 
         return "redirect:/foods";
     }
+
     
     // 6. 削除・消費の実行 (URL: POST /foods/{id}/delete)
     @PostMapping("/{id}/delete") 
