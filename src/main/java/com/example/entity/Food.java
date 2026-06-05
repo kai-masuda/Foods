@@ -17,6 +17,7 @@ import jakarta.validation.constraints.Size;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -45,6 +46,8 @@ public class Food {
 
     //【修正】taste_limit→tasteLimitに変更
     @Column(nullable = false)
+    //【修正】日付のフォーマット入れることで編集画面で日付がリセットされないように変更
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate tasteLimit;
     
 
