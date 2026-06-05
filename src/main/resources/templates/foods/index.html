@@ -17,7 +17,7 @@
                 <span class="small fw-bold text-muted ms-1">並び替え:</span>
                 
                 <select name="sort" class="form-select form-select-sm" style="width: 150px;">
-                    <option value="taste_limit" th:selected="${currentSort == 'taste_limit'}">賞味・消費期限</option>
+                    <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限</option>
                     <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
                     <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
                     <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
@@ -69,7 +69,7 @@
                             <td th:text="${food.foodName}">トマト</td>
                             <td th:text="${food.amount}">3</td>
                             <td th:text="${food.category != null ? food.category.unit : ''}">個</td>
-                            <td th:text="${food.taste_limit}">2026-06-10</td>
+                            <td th:text="${food.tasteLimit}">2026-06-10</td>
                             <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
                             <td>
                                 <div class="d-flex gap-2">
@@ -77,10 +77,11 @@
                                         class="btn btn-sm btn-warning">編集</a>
 
                                     <!-- 【修正】数量を指定して消費（削除）するフォームに変更 -->
+                                    <!--【修正】最小値を0.1に変更し、ste="any"で値を自由に入力できるように変更-->
                                     <form th:action="@{/foods/{id}/delete(id=${food.id})}" method="post"
                                         class="d-flex gap-1 align-items-center">
                                         <input type="number" name="reduceAmount" class="form-control form-control-sm"
-                                            style="width: 70px;" min="1" th:max="${food.amount}" value="1" required>
+                                            style="width: 70px;" min="0.1" th:max="${food.amount}" value="1" step="any" required>
                                         <button type="submit" class="btn btn-sm btn-danger"
                                             style="white-space: nowrap;">消費</button>
                                     </form>
