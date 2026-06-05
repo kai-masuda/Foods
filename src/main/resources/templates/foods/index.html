@@ -14,18 +14,19 @@
             <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
         </div>
 
+        <!--【修正】各項目の下に空白ができるように変更(mb-3で下側に空白)-->
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <form th:action="@{/foods}" method="get" class="row g-3 align-items-center">
                     
-                    <div class="col-md-4">
+                    <div class="col-md-4 mb-3">
                         <div class="input-group">
                             <span class="input-group-text">食材名</span>
                             <input type="text" name="keyword" th:value="${currentKeyword}" class="form-control" placeholder="キーワードを入力">
                         </div>
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-3 mb-3">
                         <div class="input-group">
                             <span class="input-group-text">カテゴリ</span>
                             <select name="categoryId" class="form-select">
@@ -38,7 +39,7 @@
                         </div>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-2 mb-3">
                         <select name="sort" class="form-select">
                             <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限</option>
                             <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
@@ -47,7 +48,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-1">
+                    <div class="col-md-1 mb-3">
                         <select name="direction" class="form-select">
                              <option value="asc" th:selected="${currentDirection == 'asc'}">昇順</option>
                              <option value="desc" th:selected="${currentDirection == 'desc'}">降順</option>
