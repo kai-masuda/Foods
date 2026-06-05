@@ -70,6 +70,18 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
+        int maxFoodNameLength = 10; // デフォルト値
+        try {
+            maxFoodNameLength = Food.class
+                    .getDeclaredField("foodName")
+                    .getAnnotation(jakarta.validation.constraints.Size.class)
+                    .max();
+        } catch (Exception e) {
+            // 万が一取得失敗した場合はデフォルトの10を維持
+        }
+        model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+ 
+        
         return "foods/create";
     }
     
@@ -95,6 +107,18 @@ public class FoodController {
         
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
+        
+        int maxFoodNameLength = 10; // デフォルト値
+        try {
+            maxFoodNameLength = Food.class
+                    .getDeclaredField("foodName")
+                    .getAnnotation(jakarta.validation.constraints.Size.class)
+                    .max();
+        } catch (Exception e) {
+            // 万が一取得失敗した場合はデフォルトの10を維持
+        }
+        model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+ 
         
         return "foods/edit";
     }
