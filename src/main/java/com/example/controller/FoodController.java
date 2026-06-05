@@ -71,6 +71,18 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
+        int maxFoodNameLength = 10; // デフォルト値
+        try {
+            maxFoodNameLength = Food.class
+                    .getDeclaredField("foodName")
+                    .getAnnotation(jakarta.validation.constraints.Size.class)
+                    .max();
+        } catch (Exception e) {
+            // 万が一取得失敗した場合はデフォルトの10を維持
+        }
+        model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+ 
+        
         return "foods/create";
     }
     
@@ -97,6 +109,18 @@ public class FoodController {
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("categories", categories);
         
+        int maxFoodNameLength = 10; // デフォルト値
+        try {
+            maxFoodNameLength = Food.class
+                    .getDeclaredField("foodName")
+                    .getAnnotation(jakarta.validation.constraints.Size.class)
+                    .max();
+        } catch (Exception e) {
+            // 万が一取得失敗した場合はデフォルトの10を維持
+        }
+        model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+ 
+        
         return "foods/edit";
     }
     
@@ -105,7 +129,8 @@ public class FoodController {
     public String update(
             @PathVariable Long id, 
             @ModelAttribute Food food, 
-            @RequestParam("categoryInputName") String categoryInputName,
+            //【修正】"category"に修正
+            @RequestParam("category") String categoryInputName,
             @RequestParam(value = "newCategoryUnit", required = false) String newCategoryUnit) {
         
         food.setId(id); 
@@ -119,14 +144,16 @@ public class FoodController {
     @PostMapping("/{id}/delete") 
     public String destroy(
             @PathVariable Long id, 
-            @RequestParam("reduceAmount") int reduceAmount) { // ◆追加：画面から消費する数量を受け取る
+            //【修正】reduceAmountをdouble型に変更
+            @RequestParam("reduceAmount") double reduceAmount) { // ◆追加：画面から消費する数量を受け取る
         
         // 1. 対象の食材データをデータベースから取得
         Food food = foodService.getFoodById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
         
         // 2. 現在の数量から、消費する数量を引き算する
-        int newAmount = food.getAmount() - reduceAmount;
+        //【修正】newAmountをdouble型に変更
+        double newAmount = food.getAmount() - reduceAmount;
         
         if (newAmount > 0) {
             // 残量がある場合は、数量を更新して保存
