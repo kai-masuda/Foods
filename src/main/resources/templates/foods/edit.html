@@ -32,7 +32,7 @@
                     <!-- 賞味期限 -->
                     <div class="mb-3">
                         <label for="tasteLimit" class="form-label">賞味・消費期限</label>
-                        <input type="date" th:field="*{tasteLimit}" class="form-control" required>
+                        <input type="date" th:field="*{tasteLimit}" class="form-control"max="9999-12-31" required>
                     </div>
 
                     <!-- 【修正】カテゴリ名の入力（datalistを紐付け、現在の値を初期値としてセット） -->
