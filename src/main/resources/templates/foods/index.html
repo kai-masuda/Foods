@@ -104,6 +104,9 @@
                                         <button type="submit" class="btn btn-sm btn-danger"
                                             style="white-space: nowrap;">消費</button>
                                     </form>
+                                    <a th:href="@{/foods/{id}/recipe(id=${food.id})}" class="btn btn-sm btn-info text-white" style="white-space: nowrap;">
+                                        🍳 レシピ作成
+                                    </a>                                    
                                 </div>
                             </td>
                         </tr>
