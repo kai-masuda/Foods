@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.example.entity.Category; // 実際のエンティティのパッケージ名に合わせてください
 import com.example.entity.Food;
+import com.example.repository.FoodRepository;
 
 @Controller
 @RequestMapping("/foods")
@@ -25,6 +26,9 @@ public class FoodController {
 
     @Autowired
     private com.example.service.CategoryService categoryService;
+    
+    @Autowired
+    private FoodRepository foodRepository;
 
     // 一覧表示 (URL: GET /foods)
     @GetMapping
@@ -210,5 +214,14 @@ public class FoodController {
 
         // 確定したカテゴリをFoodに紐付ける
         food.setCategory(targetCategory);
+    }
+    
+    @GetMapping("/{id}/recipe")
+    public String recipePage(@PathVariable Long id, Model model) {
+        
+        Food food = foodRepository.findById(id).orElseThrow();
+        model.addAttribute("food", food);
+        model.addAttribute("recipe", "");
+        return "foods/recipe";
     }
 }
