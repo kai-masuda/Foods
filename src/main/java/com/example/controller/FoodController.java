@@ -3,8 +3,10 @@ package com.example.controller;
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
 
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,12 +15,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.entity.Category;
 import com.example.entity.Food;
 import com.example.entity.User; // ★Userエンティティをインポート
 import com.example.repository.FoodRepository;
 import com.example.service.UserService; // ★UserServiceをインポート
+
+import reactor.core.publisher.Flux;
 
 @Controller
 @RequestMapping("/foods")
@@ -35,6 +40,10 @@ public class FoodController {
 
     @Autowired
     private UserService userService; // ★ログインユーザーを取得するために追加
+    
+    // ★ Spring AIのOllamaクライアントを注入
+    @Autowired
+    private OllamaChatModel chatModel;
 
     // 一覧表示 (URL: GET /foods)
     @GetMapping
@@ -231,12 +240,40 @@ public class FoodController {
         food.setCategory(targetCategory);
     }
     
+    /**
+     * 1. ユーザーがボタンを押したら、まずは一瞬でローディング画面を開く処理
+     * URL: GET /foods/{id}/recipe
+     */
     @GetMapping("/{id}/recipe")
     public String recipePage(@PathVariable Long id, Model model) {
-        
+        // 食材情報をリポジトリ（またはfoodService）から取得して画面に渡す
         Food food = foodRepository.findById(id).orElseThrow();
         model.addAttribute("food", food);
-        model.addAttribute("recipe", "");
-        return "foods/recipe";
+        
+        // フォルダ構造に合わせて templates/foods/recipe.html を呼び出す
+        return "foods/recipe"; 
+    }
+
+    /**
+     * 2. ★修正：文字をどんどんストリーミング出力するAPI
+     * produces = MediaType.TEXT_EVENT_STREAM_VALUE を指定してSSE通信にします
+     */
+    @GetMapping(value = "/{id}/recipe/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @ResponseBody
+    public Flux<String> generateRecipeStream(@PathVariable Long id) {
+        Food food = foodRepository.findById(id).orElseThrow();
+
+        String prompt = String.format(
+            "あなたは親切なプロの料理研究家です。食材「%s」を使った、家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。\n\n" +
+            "以下の構成で日本語で出力してください：\n" +
+            "1. 料理名\n" +
+            "2. 材料（分量）\n" +
+            "3. 作り方の手順（ステップバイステップで分かりやすく）\n" +
+            "4. 美味しく作るためのコツ", 
+            food.getFoodName()
+        );
+
+        // ★ .call() ではなく .stream() を使うことで、文字が生成されるたびに順次JavaScriptに送信されます
+        return chatModel.stream(prompt);
     }
 }
