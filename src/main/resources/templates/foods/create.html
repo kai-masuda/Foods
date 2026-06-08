@@ -42,19 +42,21 @@
                         <input type="text" id="categoryName" name="categoryName" th:value="${categoryName}"
                             class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力" required>
                         
-                        <!-- 既存のカテゴリ一覧を候補として出力（data-unitにそれぞれの単位を持たせる） -->
+                        <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
+                            <!-- th:value の中身を |カテゴリ名（単位）| の形式に変更し、JavaScript用に個別データを持たせます -->
                             <option th:each="c : ${allCategories}" 
-                                    th:value="${c.categoryName}" 
+                                    th:value="|${c.categoryName}（${c.unit}）|" 
+                                    th:data-category="${c.categoryName}"
                                     th:data-unit="${c.unit}"></option>
                         </datalist>
                     </div>
 
-                    <!-- 【修正】単位の入力（常に表示。空欄許可のため required は外す） -->
+                    <!-- 【修正】単位の入力（常に表示） -->
                     <div class="mb-3" id="unitInputArea">
                         <label for="unit" class="form-label">単位</label>
                         <input type="text" id="unit" name="unit" th:value="${unit}" class="form-control"
-                            placeholder="例：g、パック（空欄なら既存の単位）">
+                            placeholder="例：g、パック">
                     </div>
 
                     <div class="d-flex gap-2">
@@ -79,22 +81,32 @@
             }
         }
 
-        // --- 【修正】Datalist選択時および入力時の単位制御処理 ---
+        // --- 【修正】Datalist選択時のカテゴリ名・単位の自動分解処理 ---
         document.getElementById('categoryName').addEventListener('input', function () {
-            const inputValue = this.value.trim();
-            // datalist内の一致するオプションを探す
+            const inputValue = this.value.trim(); // 例: "野菜（本）" が入る
+            
+            // datalist内の th:value と一致するオプションを探す
             const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
             const unitInput = document.getElementById('unit');
 
             if (option) {
-                // 既存のカテゴリ名と一致した場合：そのカテゴリの持つ単位をプレースホルダーに表示
-                const existingUnit = option.getAttribute('data-unit');
-                unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
+                // 既存の「カテゴリ名（単位）」が選択された場合
+                const realCategoryName = option.getAttribute('data-category'); // "野菜" を取得
+                const existingUnit = option.getAttribute('data-unit');         // "本" を取得
+                
+                // 1. カテゴリ入力欄の表示をカッコなしの「野菜」に上書き
+                this.value = realCategoryName;
+                
+                // 2. 単位入力欄に既存の単位を自動セット
+                unitInput.value = existingUnit;
+                unitInput.placeholder = "例：g、パック（既存の単位を入力しました）";
             } else {
-                // 新規入力の場合：標準の案内を表示
+                // 新規カテゴリを手動タイピングしている場合（選択肢にない場合）
+                // 単位のプレースホルダーを標準に戻す
                 unitInput.placeholder = "例：g、パック";
             }
         });
     </script>
 </body>
 </html>
+

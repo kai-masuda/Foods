@@ -33,11 +33,13 @@
                                 <option value="">すべて</option>
                                 <option th:each="cat : ${categories}" 
                                         th:value="${cat.id}" 
-                                        th:text="${cat.categoryName}"
-                                        th:selected="${cat.id == currentCategoryId}">野菜</option>
+                                        th:text="|${cat.categoryName}（${cat.unit}）|"
+                                        th:selected="${cat.id == currentCategoryId}">野菜（kg）</option>
                             </select>
+
                         </div>
                     </div>
+
 
                     <div class="col-md-2 mb-3">
                         <select name="sort" class="form-select">
