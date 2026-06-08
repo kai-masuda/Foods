@@ -28,6 +28,9 @@ public class FoodController {
 
     @Autowired
     private com.example.service.CategoryService categoryService;
+    
+    @Autowired
+    private FoodRepository foodRepository;
 
     @Autowired
     private UserService userService; // ★ログインユーザーを取得するために追加
@@ -225,5 +228,14 @@ public class FoodController {
         }
 
         food.setCategory(targetCategory);
+    }
+    
+    @GetMapping("/{id}/recipe")
+    public String recipePage(@PathVariable Long id, Model model) {
+        
+        Food food = foodRepository.findById(id).orElseThrow();
+        model.addAttribute("food", food);
+        model.addAttribute("recipe", "");
+        return "foods/recipe";
     }
 }
