@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.example.entity.Category;
 import com.example.entity.Food;
 import com.example.entity.User; // ★Userエンティティをインポート
+import com.example.repository.FoodRepository;
 import com.example.service.UserService; // ★UserServiceをインポート
 
 @Controller
