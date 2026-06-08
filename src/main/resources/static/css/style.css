@@ -72,3 +72,7 @@ tr:hover { background-color: #f1f1f1; }
 .text-urgent {
     color: #fd7e14 !important;
 }
+
+.success {
+    color: #00aa00;
+}
