@@ -29,7 +29,7 @@ th, td {
     border-bottom: 1px solid #ddd;
     text-align: left;
 }
-th { background-color: #343a40; color: #fff; }
+th { background-color: black; color: white; }
 tr:hover { background-color: #f1f1f1; }
 
 /* ボタンのデザイン */

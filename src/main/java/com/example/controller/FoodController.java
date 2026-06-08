@@ -49,7 +49,7 @@ public class FoodController {
     @GetMapping
     public String index(
             @RequestParam(name = "keyword", required = false, defaultValue = "") String keyword,
-            @RequestParam(defaultValue = "id") String sort,
+            @RequestParam(defaultValue = "created_at") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) Long categoryId,
             Model model,
