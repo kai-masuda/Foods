@@ -1,11 +1,12 @@
-package com.example.controller; // 実際のパッケージ名に合わせてください
+package com.example.controller; 
 
+import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model; // 💡【重要】Modelを解決するために必須のインポート
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,9 +14,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import com.example.entity.Category; // 実際のエンティティのパッケージ名に合わせてください
+import com.example.entity.Category;
 import com.example.entity.Food;
-import com.example.repository.FoodRepository;
+import com.example.entity.User; // ★Userエンティティをインポート
+import com.example.service.UserService; // ★UserServiceをインポート
 
 @Controller
 @RequestMapping("/foods")
@@ -30,6 +32,9 @@ public class FoodController {
     @Autowired
     private FoodRepository foodRepository;
 
+    @Autowired
+    private UserService userService; // ★ログインユーザーを取得するために追加
+
     // 一覧表示 (URL: GET /foods)
     @GetMapping
     public String index(
@@ -37,11 +42,19 @@ public class FoodController {
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) Long categoryId,
-            Model model) {
+            Model model,
+            Principal principal) { // ★引数に Principal を追加
+
+        // 1. ログイン中のユーザー情報を取得
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+        Long userId = currentUser.getId();
 
         Sort sortOrder = direction.equalsIgnoreCase("desc") ? Sort.by(sort).descending() : Sort.by(sort).ascending();
 
-        List<Food> foods = foodService.serchFoods(keyword, categoryId, sortOrder);
+        // 2. ログインユーザーのIDを検索条件に渡して、自分の食材だけを取得する
+        // (※FoodService側に searchFoodsByUserId メソッドを追加する必要があります)
+        List<Food> foods = foodService.searchFoodsByUserId(userId, keyword, categoryId, sortOrder);
 
         model.addAttribute("foods", foods);
         model.addAttribute("currentKeyword", keyword);
@@ -61,8 +74,6 @@ public class FoodController {
     public String createForm(Model model) {
         model.addAttribute("food", new Food());
 
-        // 💡【修正】HTMLの <option th:each="c : ${allCategories}"> と名前を一致させるため、
-        // 属性名を "categories" から "allCategories" に変更しました
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("allCategories", categories);
 
@@ -84,11 +95,16 @@ public class FoodController {
     @PostMapping
     public String store(
             @ModelAttribute Food food,
-            // 💡【修正】HTMLの各inputの `name="categoryName"` および `name="unit"` と名前を一致させました
             @RequestParam("categoryName") String categoryName,
-            @RequestParam(value = "unit", required = false) String unit) {
+            @RequestParam(value = "unit", required = false) String unit,
+            Principal principal) { // ★引数に Principal を追加
 
-        // 修正した引数で handleCategory を呼び出し
+        // 1. ログイン中のユーザー情報を取得してFoodに紐付ける
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+        food.setUser(currentUser);
+
+        // 2. カテゴリを処理して保存
         handleCategory(food, categoryName, unit);
         foodService.saveFood(food);
         return "redirect:/foods";
@@ -101,7 +117,6 @@ public class FoodController {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
         model.addAttribute("food", food);
 
-        // 💡 編集画面でも datalist を使う場合は、登録画面と同様に "allCategories" に変更しておくと安全です
         List<Category> categories = categoryService.getAllCategories();
         model.addAttribute("allCategories", categories);
 
@@ -124,9 +139,9 @@ public class FoodController {
     public String update(
             @PathVariable Long id,
             @ModelAttribute Food food,
-            // 💡【修正】画面のinput名 (categoryName, unit) と一致させて文字列で受け取る
             @RequestParam("categoryName") String categoryName,
-            @RequestParam(value = "unit", required = false) String unit) {
+            @RequestParam(value = "unit", required = false) String unit,
+            Principal principal) { // ★引数に Principal を追加
 
         // 1. データベースから古い食材データを取得
         Food existingFood = foodService.getFoodById(id)
@@ -137,10 +152,15 @@ public class FoodController {
         existingFood.setAmount(food.getAmount());
         existingFood.setTasteLimit(food.getTasteLimit());
 
-        // 3. 編集されたカテゴリ名と単位を元に、handleCategoryメソッドで適切に解決・紐付け
+        // 3. ログイン中のユーザー情報を取得して再セット（セキュリティ担保のため）
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+        existingFood.setUser(currentUser);
+
+        // 4. 編集されたカテゴリ名と単位を元に、handleCategoryメソッドで適切に解決・紐付け
         handleCategory(existingFood, categoryName, unit);
 
-        // 4. データベースに上書き保存
+        // 5. データベースに上書き保存
         foodService.saveFood(existingFood);
         return "redirect:/foods";
     }
@@ -181,21 +201,17 @@ public class FoodController {
         String targetUnit = (unit != null) ? unit.trim() : "";
 
         if (targetUnit.isEmpty()) {
-            // 単位が空欄なら、同じ名前の既存カテゴリを検索
             targetCategory = allCategories.stream()
                     .filter(c -> c.getCategoryName().equals(trimmedName))
                     .findFirst()
                     .orElse(null);
 
             if (targetCategory != null) {
-                // 既存のカテゴリが見つかったので、その単位を引き継ぐ
                 targetUnit = targetCategory.getUnit();
             } else {
-                // 完全新規で単位も空ならデフォルトの「個」
                 targetUnit = "個";
             }
         } else {
-            // 単位が入力されている場合は、名前と単位の両方が一致するものを探す
             String finalUnit = targetUnit;
             targetCategory = allCategories.stream()
                     .filter(c -> c.getCategoryName().equals(trimmedName) && finalUnit.equals(c.getUnit()))
@@ -203,7 +219,6 @@ public class FoodController {
                     .orElse(null);
         }
 
-        // 一致するものがなければ、新しいカテゴリとして保存
         if (targetCategory == null) {
             Category newCategory = new Category();
             newCategory.setCategoryName(trimmedName);
@@ -212,7 +227,6 @@ public class FoodController {
             targetCategory = categoryService.saveCategory(newCategory);
         }
 
-        // 確定したカテゴリをFoodに紐付ける
         food.setCategory(targetCategory);
     }
     

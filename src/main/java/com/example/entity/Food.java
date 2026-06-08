@@ -57,6 +57,14 @@ public class Food {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     
+
+ // @ManyToOneで複数の食材が1つのユーザーに属する(多対1)
+ @ManyToOne
+ // @JoinColumnで外部キーであるuser_idをカラム名として指定
+ @JoinColumn(name = "user_id", nullable = false)
+ private User user; // ★これを追加
+
+    
     @CreatedDate
     @Column(updatable = false, nullable = false)
     private LocalDateTime created_at;

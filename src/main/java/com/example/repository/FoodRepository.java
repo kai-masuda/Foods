@@ -4,16 +4,24 @@ import java.util.List;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // ★追加
-import org.springframework.data.repository.query.Param; // ★追加
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.example.entity.Food;
 
 public interface FoodRepository extends JpaRepository<Food, Long>{
     
-    List<Food> findByCategoryId(Long categoryId, Sort sort);
-    @Query("SELECT f FROM Food f WHERE f.foodName LIKE %:keyword%")
-    List<Food> searchByName(@Param("keyword") String keyword, Sort sort);
-    @Query("SELECT f FROM Food f WHERE f.foodName LIKE %:keyword% AND f.category.id = :categoryId")
-    List<Food> searchByNameAndCategoryId(@Param("keyword") String keyword, @Param("categoryId") Long categoryId, Sort sort);
+    // ★追加：特定のユーザーの食材を全件取得する
+    List<Food> findByUserId(Long userId, Sort sort);
+
+    // ★修正：特定のユーザー、かつ特定のカテゴリで絞り込む
+    List<Food> findByUserIdAndCategoryId(Long userId, Long categoryId, Sort sort);
+
+    // ★修正：特定のユーザー、かつキーワードで部分一致検索する
+    @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND f.foodName LIKE %:keyword%")
+    List<Food> searchByUserIdAndName(@Param("userId") Long userId, @Param("keyword") String keyword, Sort sort);
+
+    // ★修正：特定のユーザー、かつキーワード、かつカテゴリで絞り込む
+    @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND f.foodName LIKE %:keyword% AND f.category.id = :categoryId")
+    List<Food> searchByUserIdAndNameAndCategoryId(@Param("userId") Long userId, @Param("keyword") String keyword, @Param("categoryId") Long categoryId, Sort sort);
 }

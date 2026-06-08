@@ -18,9 +18,9 @@ public class FoodService {
     @Autowired
     private FoodRepository foodRepository;
     
-    // 食材の一覧取得  //【修正】引数sort追加
-    public List<Food> getAllFoods(Sort sort) {
-        return foodRepository.findAll(sort);
+    // 食材の一覧取得 (※特定のユーザーのものだけを取得するように変更)
+    public List<Food> getAllFoodsByUserId(Long userId, Sort sort) {
+        return foodRepository.findByUserId(userId, sort);
     }
     
     // 食材を1件取得
@@ -40,23 +40,24 @@ public class FoodService {
         foodRepository.deleteById(id);
     }
     
-    //検索・絞り込み統合
-    public List<Food> serchFoods(String keyword, Long categoryId, Sort sort){
+    // ★ユーザーごとに検索・絞り込みを統合した新しいメソッド
+    public List<Food> searchFoodsByUserId(Long userId, String keyword, Long categoryId, Sort sort){
         boolean hasKeyword = keyword != null && !keyword.isBlank();
         boolean hasCategory = categoryId != null;
         
-        //キーワード、カテゴリ絞り込みあり
+        // 1. キーワード、カテゴリ絞り込みあり
         if(hasKeyword && hasCategory) {
-            return foodRepository.searchByNameAndCategoryId(keyword, categoryId, sort);
-        //キーワードあり
+            return foodRepository.searchByUserIdAndNameAndCategoryId(userId, keyword, categoryId, sort);
+        // 2. キーワードあり
         } else if(hasKeyword){
-            return foodRepository.searchByName(keyword, sort);
-        //カテゴリ絞り込みあり
+            return foodRepository.searchByUserIdAndName(userId, keyword, sort);
+        // 3. カテゴリ絞り込みあり
         } else if(hasCategory) {
-            return foodRepository.findByCategoryId(categoryId, sort);
-        //絞り込みなし
+            return foodRepository.findByUserIdAndCategoryId(userId, categoryId, sort);
+        // 4. 絞り込みなし（ログインユーザーの食材全件）
         } else {
-            return foodRepository.findAll(sort);
+            return foodRepository.findByUserId(userId, sort);
         }
     }
 }
+
