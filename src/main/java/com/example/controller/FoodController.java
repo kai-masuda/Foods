@@ -188,7 +188,8 @@ public class FoodController {
 
         // 2. 現在の数量から、消費する数量を引き算する
         double newAmount = food.getAmount() - reduceAmount;
-
+        newAmount = Math.round(newAmount * 100.0) / 100.0; 
+        
         if (newAmount > 0) {
             // 残量がある場合は、数量を更新して保存
             food.setAmount(newAmount);
