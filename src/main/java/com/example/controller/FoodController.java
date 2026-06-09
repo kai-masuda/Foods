@@ -26,7 +26,7 @@ import com.example.service.UserService; // ★UserServiceをインポート
 import reactor.core.publisher.Flux;
 
 @Controller
-@RequestMapping("/foods")
+@RequestMapping("/foods") 
 public class FoodController {
 
     @Autowired
