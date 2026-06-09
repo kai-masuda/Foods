@@ -32,30 +32,31 @@
                     <!-- 賞味期限 -->
                     <div class="mb-3">
                         <label for="tasteLimit" class="form-label">賞味・消費期限</label>
-                        <input type="date" th:field="*{tasteLimit}" class="form-control"max="9999-12-31" required>
+                        <input type="date" th:field="*{tasteLimit}" class="form-control" max="9999-12-31" required>
                     </div>
 
-                    <!-- 【修正】カテゴリ名の入力（datalistを紐付け、現在の値を初期値としてセット） -->
+                    <!-- 【修正】カテゴリ名の入力（datalistを紐付け） -->
                     <div class="mb-3">
                         <label for="categoryName" class="form-label">カテゴリ名</label>
-                        <input type="text" id="categoryName" name="categoryName" 
-                            th:value="${food.category != null ? food.category.categoryName : ''}"
-                            class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力" required>
-                        
+                        <!-- list属性で下のdatalistを指定します -->
+                        <input type="text" id="categoryName" name="categoryName" th:value="${categoryName}"
+                            class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力"
+                            required>
+
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
-                            <option th:each="c : ${allCategories}" 
-                                    th:value="${c.categoryName}" 
-                                    th:data-unit="${c.unit}"></option>
+                            <!-- th:value の中身を |カテゴリ名（単位）| の形式に変更し、JavaScript用に個別データを持たせます -->
+                            <option th:each="c : ${allCategories}" th:value="|${c.categoryName}（${c.unit}）|"
+                                th:data-category="${c.categoryName}" th:data-unit="${c.unit}"></option>
                         </datalist>
                     </div>
 
                     <!-- 【修正】単位の入力（現在の単位を初期値としてセット、requiredは外す） -->
                     <div class="mb-4" id="unitInputArea">
                         <label for="unit" class="form-label">単位</label>
-                        <input type="text" id="unit" name="unit" 
-                            th:value="${food.category != null ? food.category.unit : ''}" 
-                            class="form-control" placeholder="例：g、パック（空欄なら既存の単位）">
+                        <input type="text" id="unit" name="unit"
+                            th:value="${food.category != null ? food.category.unit : ''}" class="form-control"
+                            placeholder="例：g、パック（空欄なら既存の単位）">
                     </div>
 
                     <div class="d-flex gap-2">
@@ -95,6 +96,61 @@
                 unitInput.placeholder = "例：g、パック";
             }
         });
+
+        function checkFoodNameLength(input, maxLength) {
+            if (input.validity.valueMissing) {
+                input.setCustomValidity("このフィールドに入力してください。");
+            }
+            else if (input.validity.patternMismatch) {
+                input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
+            }
+            else {
+                input.setCustomValidity("");
+            }
+        }
+
+        // --- 【修正】Datalist選択時のカテゴリ名・単位の自動分解処理 ---
+        document.getElementById('categoryName').addEventListener('input', function () {
+            const inputValue = this.value.trim(); // 例: "野菜（本）" が入る
+
+            // datalist内の th:value と一致するオプションを探す
+            const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
+            const unitInput = document.getElementById('unit');
+
+            if (option) {
+                // 既存の「カテゴリ名（単位）」が選択された場合
+                const realCategoryName = option.getAttribute('data-category'); // "野菜" を取得
+                const existingUnit = option.getAttribute('data-unit');         // "本" を取得
+
+                // 1. カテゴリ入力欄の表示をカッコなしの「野菜」に上書き
+                this.value = realCategoryName;
+
+                // 2. 単位入力欄に既存の単位を自動セット
+                unitInput.value = existingUnit;
+                unitInput.placeholder = "例：g、パック（既存の単位を入力しました）";
+            } else {
+                // 新規カテゴリを手動タイピングしている場合（選択肢にない場合）
+                // 単位のプレースホルダーを標準に戻す
+                unitInput.placeholder = "例：g、パック";
+            }
+        });
+
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. datalist要素を取得
+            const datalist = document.getElementById("categoryOptions");
+            if (!datalist) return;
+
+            // 2. 中身のoption（カテゴリ）を配列に変換
+            const options = Array.from(datalist.options);
+
+            // 3. カテゴリ名（あいうえお順・アルファベット順）でソート
+            options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
+
+            // 4. datalistの中身を一度空にして、ソートした順に並び替えて再追加
+            datalist.innerHTML = "";
+            options.forEach(option => datalist.appendChild(option));
+        });
     </script>
 </body>
+
 </html>
