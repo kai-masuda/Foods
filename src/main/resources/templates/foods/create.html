@@ -106,6 +106,22 @@
                 unitInput.placeholder = "例：g、パック";
             }
         });
+        
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. datalist要素を取得
+            const datalist = document.getElementById("categoryOptions");
+            if (!datalist) return;
+
+            // 2. 中身のoption（カテゴリ）を配列に変換
+            const options = Array.from(datalist.options);
+
+            // 3. カテゴリ名（あいうえお順・アルファベット順）でソート
+            options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
+
+            // 4. datalistの中身を一度空にして、ソートした順に並び替えて再追加
+            datalist.innerHTML = "";
+            options.forEach(option => datalist.appendChild(option));
+        });
     </script>
 </body>
 </html>
