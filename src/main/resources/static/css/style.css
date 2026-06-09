@@ -64,15 +64,18 @@ tr:hover { background-color: #f1f1f1; }
 .gap-1 { gap: 5px; }
 .gap-2 { gap: 10px; }
 
-/* 期限切れ（太字 ＋ 読みやすい赤） */
+/* 期限切れ */
 .text-expired {
     color: #dc3545 !important;
 }
-/* 期限間近（太字 ＋ 読みやすいオレンジ） */
+/* 期限間近*/
 .text-urgent {
     color: #fd7e14 !important;
 }
 
 .success {
     color: #00aa00;
+}
+.error{
+    color:red;
 }
