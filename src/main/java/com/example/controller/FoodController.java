@@ -26,7 +26,7 @@ import com.example.service.UserService; // ★UserServiceをインポート
 import reactor.core.publisher.Flux;
 
 @Controller
-@RequestMapping("/foods")
+@RequestMapping("/foods") 
 public class FoodController {
 
     @Autowired
@@ -75,6 +75,9 @@ public class FoodController {
         model.addAttribute("currentSort", sort);
         model.addAttribute("currentDirection", direction);
         model.addAttribute("reverseDirection", direction.equals("asc") ? "desc" : "asc");
+        
+        //【追加】usernameを得る
+        model.addAttribute("loginUser", currentUser.getUsername());
 
         return "foods/index";
     }
@@ -266,7 +269,7 @@ public class FoodController {
         Food food = foodRepository.findById(id).orElseThrow();
 
         String prompt = String.format(
-            "あなたは親切なプロの料理人です。食材「%s」を使った、家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。\n\n" +
+            "あなたは親切なプロの料理人です。食材「%s」を使った、家庭で簡単に作れる美味しい料理のレシピを3つ提案してください。\n\n" +
             "以下の構成で日本語で出力してください：\n" +
             "1. 料理名\n" +
             "2. 材料（分量）\n" +
@@ -278,7 +281,8 @@ public class FoodController {
             "・文章はできるだけ日本語を使用する。" +
             "・なるべく日本で一般的な家庭料理を提案する。" +
             "・作り方は料理初心者に向けて提案する気持ちで懇切丁寧に教えてあげる。"+
-            "・日本で一般的な食材の切り方をする。"
+            "・日本で一般的な食材の切り方をする。" +
+            "・実際にそのレシピ通りにつくれば、本当においしい料理ができるような作り方を提案する。"
             ,
             food.getFoodName()
         );
