@@ -9,8 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 import com.example.entity.Food;
 
-public interface FoodRepository extends JpaRepository<Food, Long>{
-    
+public interface FoodRepository extends JpaRepository<Food, Long> {
+
     // ★追加：特定のユーザーの食材を全件取得する
     List<Food> findByUserId(Long userId, Sort sort);
 
@@ -26,4 +26,9 @@ public interface FoodRepository extends JpaRepository<Food, Long>{
     List<Food> searchByUserIdAndNameAndCategoryName(@Param("userId") Long userId, @Param("keyword") String keyword, @Param("categoryName") String categoryName, Sort sort);
     
     //
+    List<Food> searchByUserIdAndNameAndCategoryId(@Param("userId") Long userId, @Param("keyword") String keyword,
+            @Param("categoryId") Long categoryId, Sort sort);
+
+    // 💡 ユーザーIDに紐づく食材リストを取得するメソッドを追加
+    List<Food> findByUserId(Long userId);
 }
