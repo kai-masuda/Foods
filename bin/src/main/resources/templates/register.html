@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ユーザー登録</title>
+    <!-- 共通のCSSを読み込み -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        /* 画面の中央に配置するための専用スタイル */
+        .register-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 90vh;
+        }
+        .register-box {
+            width: 100%;
+            max-width: 400px;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .mt-3 {
+            margin-top: 15px;
+        }
+        /* エラー文言の微調整 */
+        span.error {
+            display: block;
+            margin-top: 5px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-wrapper">
+        <!-- style.cssの .container クラスを適用 -->
+        <div class="container register-box">
+            
+            <h1 class="text-center" style="margin-top: 0; margin-bottom: 20px;">ユーザー登録</h1>
+
+            <form th:action="@{/register}" th:object="${user}" method="post">
+                <!-- ユーザー名 -->
+                <div class="mb-3">
+                    <label for="username" class="form-label">ユーザー名:</label>
+                    <input type="text" id="username" th:field="*{username}" class="form-control" required>
+                    <!-- バリデーションエラーメッセージ -->
+                    <span class="error" th:if="${#fields.hasErrors('username')}" th:errors="*{username}"></span>
+                </div>
+
+                <!-- パスワード -->
+                <div class="mb-4">
+                    <label for="password" class="form-label">パスワード:</label>
+                    <input type="password" id="password" th:field="*{password}" class="form-control" required>
+                    <!-- バリデーションエラーメッセージ -->
+                    <span class="error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></span>
+                </div>
+
+                <!-- 登録ボタン -->
+                <div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">登録</button>
+                </div>
+            </form>
+
+            <!-- ログイン画面へのリンク -->
+            <p class="text-center mt-3" style="font-size: 14px; margin-bottom: 0;">
+                すでにアカウントをお持ちの方は <a th:href="@{/login}">こちら</a> からログインしてください。
+            </p>
+            
+        </div>
+    </div>
+
+</body>
+</html>

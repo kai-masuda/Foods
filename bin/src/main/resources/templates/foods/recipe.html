@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>AIレシピ提案</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+    <div class="container mt-5" style="max-width: 800px;">
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">🍳 AIレシピ提案</h5>
+                <span class="badge bg-light text-dark" th:text="${food.foodName}">食材名</span>
+            </div>
+            
+            <div class="card-body p-4">
+                
+                <div id="loading-section" class="text-center py-5">
+                    <div class="spinner-border text-info mb-3" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <h5 class="text-muted">AIがレシピを考案中...</h5>
+                </div>
+
+                <div id="recipe-section" class="d-none">
+                    <div class="p-4 bg-white border rounded shadow-inner" 
+                         style="white-space: pre-wrap; font-size: 1.1rem; line-height: 1.8; min-height: 200px;"
+                         id="recipe-content"></div>
+                </div>
+
+            </div>
+            
+            <div class="card-footer bg-white text-end">
+                <a th:href="@{/foods}" class="btn btn-secondary">食材一覧に戻る</a>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            const foodId = /*[[${food.id}]]*/ 0;
+            const recipeContent = document.getElementById("recipe-content");
+            const loadingSection = document.getElementById("loading-section");
+            const recipeSection = document.getElementById("recipe-section");
+
+            // ★ ストリーミングAPI（SSE）に接続
+            const eventSource = new EventSource(`/foods/${foodId}/recipe/generate`);
+
+            // Javaから新しい文字（データ）が届くたびに発火するイベント
+            eventSource.onmessage = function(event) {
+                // 最初の1文字目が届いた瞬間にローディングを隠して結果枠を出す
+                if (recipeSection.classList.contains("d-none")) {
+                    loadingSection.classList.add("d-none");
+                    recipeSection.classList.remove("d-none");
+                }
+
+                // 送られてきた文字を末尾にどんどん追加していく
+                // (改行コードやスペースがそのまま反映されるよう、必要に応じてパース処理が入る場合がありますが、Spring AIの標準的なプレーンテキストであればそのままで動くことが多いです)
+                if (event.data) {
+                    // Spring AIのストリームデータは稀に特殊な区切り文字が入る場合があるため、簡易置換や追加を行います
+                    recipeContent.textContent += event.data;
+                }
+            };
+
+            // 生成がすべて正常に終了、またはエラーが起きた場合
+            eventSource.onerror = function(event) {
+                // 通信が正常に終了しても onerror が呼ばれる仕様（readyStateがCLOSEDになる）のため、
+                // すでに文字が出力されていれば「完了」とみなして通信を閉じます
+                if (recipeContent.textContent.length > 0) {
+                    eventSource.close(); 
+                } else {
+                    console.error('Stream Error:', event);
+                    loadingSection.innerHTML = `
+                        <div class="text-danger py-4">
+                            <h5>⚠️ レシピの生成に失敗しました</h5>
+                            <p class="small mb-0">Ollamaの起動状態を確認してください。</p>
+                        </div>
+                    `;
+                    eventSource.close();
+                }
+            };
+        });
+    </script>
+</body>
+</html>
