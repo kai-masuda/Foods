@@ -11,8 +11,8 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">🍳 AIレシピ提案</h5>
-                <!-- 💡 選択された食材名をカンマ区切りでバッジに表示 -->
-                <span class="badge bg-light text-dark" th:text="${foodNamesStr}">食材名リスト</span>
+                <!-- 💡 選択された1つの食材名だけをバッジに表示 -->
+                <span class="badge bg-light text-dark" th:text="${food.foodName}">食材名</span>
             </div>
             
             <div class="card-body p-4">
@@ -40,19 +40,20 @@
 
     <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function() {
-            // 💡 Java から渡された選択食材 ID のリストを取得 (例:)
-            const foodIds = /*[[${foodIds}]]*/ [];
+            // 💡 Java側から渡された、単一の食材IDを取得します
+            const foodId = /*[[${food.id}]]*/ null;
             
             const recipeContent = document.getElementById("recipe-content");
             const loadingSection = document.getElementById("loading-section");
             const recipeSection = document.getElementById("recipe-section");
 
-            // 💡 複数の ID を URL パラメータ形式に変換します (?foodIds=1&foodIds=2...)
-            const params = new URLSearchParams();
-            foodIds.forEach(id => params.append('foodIds', id));
+            if (!foodId) {
+                console.error('Food ID is null or missing.');
+                return;
+            }
 
-            // ★ 複数選択対応のストリーミングAPI（SSE）に接続
-            const eventSource = new EventSource(`/foods/recipe/stream?${params.toString()}`);
+            // ★ 単一食材専用の、一番軽いストリーミングAPI（SSE）に直接接続します
+            const eventSource = new EventSource(`/foods/${foodId}/recipe/generate`);
 
             // Javaから新しい文字（データ）が届くたびに発火するイベント
             eventSource.onmessage = function(event) {
@@ -62,17 +63,23 @@
                     recipeSection.classList.remove("d-none");
                 }
 
-                // 送られてきた文字を末尾にどんどん追加していく
                 if (event.data) {
+                    // 💡 サーバーからの終了合図[DONE]を検知したら、即座に通信を閉じてループを防ぐ
+                    if (event.data.trim() === "[DONE]") {
+                        console.log("Stream finished completely.");
+                        eventSource.close();
+                        return;
+                    }
                     recipeContent.textContent += event.data;
                 }
             };
 
             // 生成がすべて正常に終了、またはエラーが起きた場合
             eventSource.onerror = function(event) {
-                if (recipeContent.textContent.length > 0) {
-                    eventSource.close(); 
-                } else {
+                // 🛑 自動リトライ（無限ループ）を絶対に阻止するため、何よりも先にクローズ
+                eventSource.close(); 
+                
+                if (recipeContent.textContent.length === 0) {
                     console.error('Stream Error:', event);
                     loadingSection.innerHTML = `
                         <div class="text-danger py-4">
@@ -80,10 +87,10 @@
                             <p class="small mb-0">Ollamaの起動状態や、食材が正しく選択されているか確認してください。</p>
                         </div>
                     `;
-                    eventSource.close();
                 }
             };
         });
     </script>
 </body>
 </html>
+

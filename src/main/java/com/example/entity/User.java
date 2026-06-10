@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,9 +26,10 @@ public class User {
     private String username;
 
     @NotBlank(message = "パスワードは必須です")
-    @Column(nullable = false)
-    @Size(min = 6, max=20, message = "パスワードは{min}文字以上{max}文字以下で入力して下さい")
+ // ❌ もし @Column(length = 20) がついていたら削除、または長さを広げてください
+    @Column(nullable = false, length = 60) // BCryptハッシュに対応するため60以上が必要
     private String password;
+
 
     @Column(nullable = false)
     private String role = "USER";
