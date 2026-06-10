@@ -50,9 +50,10 @@
 
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
-                            <!-- th:value の中身を |カテゴリ名（単位）| の形式に変更し、JavaScript用に個別データを持たせます -->
-                            <option th:each="c : ${allCategories}" th:value="|${c.categoryName}（${c.unit}）|"
-                                th:data-category="${c.categoryName}" th:data-unit="${c.unit}"></option>
+                            <option th:each="c : ${allCategories}" 
+                                    th:value="${c.categoryName + '（' + c.unit.unitName + '）'}"
+                                    th:data-category="${c.categoryName}" 
+                                    th:data-unit="${c.unit.unitName}"></option>
                         </datalist>
                     </div>
 
@@ -60,7 +61,7 @@
                     <div class="mb-4" id="unitInputArea">
                         <label for="unit" class="form-label">単位</label>
                         <input type="text" id="unit" name="unit"
-                            th:value="${food.category != null ? food.category.unit : ''}" class="form-control"
+                            th:value="${food.category != null &&food.category.unit != null ? food.category.unit.unitName : ''}" class="form-control"
                             placeholder="例：g、パック（空欄なら既存の単位）">
                     </div>
 
@@ -74,77 +75,56 @@
     </div>
 
     <script>
-        function checkFoodNameLength(input, maxLength) {
-            if (input.validity.valueMissing) {
-                input.setCustomValidity("このフィールドに入力してください。");
+            function checkFoodNameLength(input, maxLength) {
+                if (input.validity.valueMissing) {
+                    input.setCustomValidity("このフィールドに入力してください。");
+                }
+                else if (input.validity.patternMismatch) {
+                    input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
+                }
+                else {
+                    input.setCustomValidity("");
+                }
             }
-            else if (input.validity.patternMismatch) {
-                input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
-            }
-            else {
-                input.setCustomValidity("");
-            }
-        }
 
-        // --- 【修正】Datalist選択時および入力時の単位制御処理 ---
-        document.getElementById('categoryName').addEventListener('input', function () {
-            const inputValue = this.value.trim();
-            const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
-            const unitInput = document.getElementById('unit');
+            // ★重複していた処理を1つに綺麗にまとめました
+            document.getElementById('categoryName').addEventListener('input', function () {
+                const inputValue = this.value.trim(); // 例: "きのこ（個）" または "きのこ"
+                const unitInput = document.getElementById('unit');
 
-            if (option) {
-                // 既存のカテゴリ名と一致した場合
-                const existingUnit = option.getAttribute('data-unit');
-                unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
-            } else {
-                // 新規入力の場合
-                unitInput.placeholder = "例：g、パック";
-            }
-        });
+                // datalist内のオプションを検索
+                const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
 
+                if (option) {
+                    // 既存の「カテゴリ名（単位）」が選択された場合の処理
+                    const realCategoryName = option.getAttribute('data-category'); // "きのこ"
+                    const existingUnit = option.getAttribute('data-unit');         // "個"
 
-        // --- 【修正】Datalist選択時のカテゴリ名・単位の自動分解処理 ---
-        document.getElementById('categoryName').addEventListener('input', function () {
-            const inputValue = this.value.trim(); // 例: "野菜（本）" が入る
+                    // 1. カテゴリ入力欄の表示をカッコなしの綺麗な名前に上書き
+                    this.value = realCategoryName;
 
-            // datalist内の th:value と一致するオプションを探す
-            const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
-            const unitInput = document.getElementById('unit');
+                    // 2. 単位入力欄に既存の単位を自動セット
+                    unitInput.value = existingUnit;
+                    unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
+                } else {
+                    // 手動でタイピング中、または一致するものがない場合
+                    // 単位入力欄の値はそのままにし、プレースホルダーだけ標準に戻す
+                    unitInput.placeholder = "例：g、パック";
+                }
+            });
 
-            if (option) {
-                // 既存の「カテゴリ名（単位）」が選択された場合
-                const realCategoryName = option.getAttribute('data-category'); // "野菜" を取得
-                const existingUnit = option.getAttribute('data-unit');         // "本" を取得
+            // 画面を開いたときに五十音順に並び替える処理
+            document.addEventListener("DOMContentLoaded", () => {
+                const datalist = document.getElementById("categoryOptions");
+                if (!datalist) return;
 
-                // 1. カテゴリ入力欄の表示をカッコなしの「野菜」に上書き
-                this.value = realCategoryName;
+                const options = Array.from(datalist.options);
+                options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
 
-                // 2. 単位入力欄に既存の単位を自動セット
-                unitInput.value = existingUnit;
-                unitInput.placeholder = "例：g、パック（既存の単位を入力しました）";
-            } else {
-                // 新規カテゴリを手動タイピングしている場合（選択肢にない場合）
-                // 単位のプレースホルダーを標準に戻す
-                unitInput.placeholder = "例：g、パック";
-            }
-        });
-
-        document.addEventListener("DOMContentLoaded", () => {
-            // 1. datalist要素を取得
-            const datalist = document.getElementById("categoryOptions");
-            if (!datalist) return;
-
-            // 2. 中身のoption（カテゴリ）を配列に変換
-            const options = Array.from(datalist.options);
-
-            // 3. カテゴリ名（あいうえお順・アルファベット順）でソート
-            options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
-
-            // 4. datalistの中身を一度空にして、ソートした順に並び替えて再追加
-            datalist.innerHTML = "";
-            options.forEach(option => datalist.appendChild(option));
-        });
-    </script>
+                datalist.innerHTML = "";
+                options.forEach(option => datalist.appendChild(option));
+            });
+        </script>
 </body>
 
 </html>
