@@ -23,6 +23,7 @@ public class FoodService {
         return foodRepository.findByUserId(userId, sort);
     }
     
+    
     // 食材を1件取得
     public Optional<Food> getFoodById(Long id) {
         return foodRepository.findById(id);
@@ -41,19 +42,19 @@ public class FoodService {
     }
     
     // ★ユーザーごとに検索・絞り込みを統合した新しいメソッド
-    public List<Food> searchFoodsByUserId(Long userId, String keyword, Long categoryId, Sort sort){
+    public List<Food> searchFoodsByUserId(Long userId, String keyword, String categoryName, Sort sort){
         boolean hasKeyword = keyword != null && !keyword.isBlank();
-        boolean hasCategory = categoryId != null;
+        boolean hasCategory = categoryName != null && !categoryName.isBlank();
         
         // 1. キーワード、カテゴリ絞り込みあり
         if(hasKeyword && hasCategory) {
-            return foodRepository.searchByUserIdAndNameAndCategoryId(userId, keyword, categoryId, sort);
+            return foodRepository.searchByUserIdAndNameAndCategoryName(userId, keyword, categoryName, sort);
         // 2. キーワードあり
         } else if(hasKeyword){
             return foodRepository.searchByUserIdAndName(userId, keyword, sort);
         // 3. カテゴリ絞り込みあり
         } else if(hasCategory) {
-            return foodRepository.findByUserIdAndCategoryId(userId, categoryId, sort);
+            return foodRepository.findByUserIdAndCategory_CategoryName(userId, categoryName, sort);
         // 4. 絞り込みなし（ログインユーザーの食材全件）
         } else {
             return foodRepository.findByUserId(userId, sort);

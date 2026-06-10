@@ -57,6 +57,7 @@ public class FoodController {
             @RequestParam(defaultValue = "id") String sort,
             @RequestParam(defaultValue = "asc") String direction,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String categoryNames,
             Model model,
             Principal principal) { // ★引数に Principal を追加
 
@@ -67,16 +68,27 @@ public class FoodController {
 
         Sort sortOrder = direction.equalsIgnoreCase("desc") ? Sort.by(sort).descending() : Sort.by(sort).ascending();
 
+        List<Category> allCategories = categoryService.getAllCategories();
+        
+        //重複しているカテゴリ名をまとめる（カテゴリ絞り込みのため）
+        List<String> bundleCategoryNames = allCategories.stream()
+                .map(Category :: getCategoryName)
+                .distinct()
+                .toList();
+        
+        model.addAttribute("categoryNames", bundleCategoryNames);
+        
+        //htmlのth:selectedの判定用
+        model.addAttribute("currentCategoryName", categoryNames);
+        
         // 2. ログインユーザーのIDを検索条件に渡して、自分の食材だけを取得する
         // (※FoodService側に searchFoodsByUserId メソッドを追加する必要があります)
-        List<Food> foods = foodService.searchFoodsByUserId(userId, keyword, categoryId, sortOrder);
+        List<Food> foods = foodService.searchFoodsByUserId(userId, keyword, categoryNames, sortOrder);
 
         model.addAttribute("foods", foods);
+        
         model.addAttribute("currentKeyword", keyword);
         model.addAttribute("currentCategoryId", categoryId);
-
-        model.addAttribute("categories", categoryService.getAllCategories());
-
         model.addAttribute("currentSort", sort);
         model.addAttribute("currentDirection", direction);
         model.addAttribute("reverseDirection", direction.equals("asc") ? "desc" : "asc");

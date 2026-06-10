@@ -15,7 +15,7 @@ public interface FoodRepository extends JpaRepository<Food, Long>{
     List<Food> findByUserId(Long userId, Sort sort);
 
     // ★修正：特定のユーザー、かつ特定のカテゴリで絞り込む
-    List<Food> findByUserIdAndCategoryId(Long userId, Long categoryId, Sort sort);
+    List<Food> findByUserIdAndCategory_CategoryName(Long userId, String categoryName, Sort sort);
 
     // ★修正：特定のユーザー、かつキーワードで部分一致検索する
     @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND f.foodName LIKE %:keyword%")
@@ -23,5 +23,7 @@ public interface FoodRepository extends JpaRepository<Food, Long>{
 
     // ★修正：特定のユーザー、かつキーワード、かつカテゴリで絞り込む
     @Query("SELECT f FROM Food f WHERE f.user.id = :userId AND f.foodName LIKE %:keyword% AND f.category.id = :categoryId")
-    List<Food> searchByUserIdAndNameAndCategoryId(@Param("userId") Long userId, @Param("keyword") String keyword, @Param("categoryId") Long categoryId, Sort sort);
+    List<Food> searchByUserIdAndNameAndCategoryName(@Param("userId") Long userId, @Param("keyword") String keyword, @Param("categoryName") String categoryName, Sort sort);
+    
+    //
 }
