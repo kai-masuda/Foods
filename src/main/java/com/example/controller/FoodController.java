@@ -300,7 +300,7 @@ public class FoodController {
             User currentUser = userService.findByUsername(username);
             if (currentUser != null) {
                 // ユーザーIDに紐づく食材リストをすべて取得
-                List<Food> allFoods = foodRepository.findByUserId(currentUser.getId()); // ※1
+                List<Food> allFoods = foodRepository.findByUserId(currentUser.getId(), org.springframework.data.domain.Sort.unsorted());
 
                 // メイン食材以外の名前をカンマ区切りで抽出
                 List<String> otherFoodNames = allFoods.stream()
