@@ -73,7 +73,6 @@ public class Food {
     @Column(nullable = false)
     private LocalDateTime updated_at;
     
-    // 【追加】動いていたアプリと全く同じコールバック処理
     @PrePersist
     public void onPrePersist() {
         setCreated_at(LocalDateTime.now());
