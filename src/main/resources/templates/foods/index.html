@@ -43,11 +43,12 @@
                     <div class="col-md-3">
                         <div class="input-group">
                             <span class="input-group-text">カテゴリ</span>
-                            <select name="categoryId" class="form-select">
+                            <select name="categoryNames" class="form-select">
                                 <option value="">すべて</option>
-                                <option th:each="cat : ${categories}" th:value="${cat.id}"
-                                    th:text="|${cat.categoryName}（${cat.unit}）|"
-                                    th:selected="${cat.id == currentCategoryId}">野菜（kg）</option>
+                                
+                                <option th:each="name : ${categoryNames}" th:value="${name}"
+                                    th:text="${name}"
+                                    th:selected="${name == currentCategoryName}">野菜</option>
                             </select>
                         </div>
                     </div>
