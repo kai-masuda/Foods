@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>AIレシピ提案</title>
@@ -11,7 +11,8 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">🍳 AIレシピ提案</h5>
-                <span class="badge bg-light text-dark" th:text="${food.foodName}">食材名</span>
+                <!-- 💡 選択された食材名をカンマ区切りでバッジに表示 -->
+                <span class="badge bg-light text-dark" th:text="${foodNamesStr}">食材名リスト</span>
             </div>
             
             <div class="card-body p-4">
@@ -39,13 +40,19 @@
 
     <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function() {
-            const foodId = /*[[${food.id}]]*/ 0;
+            // 💡 Java から渡された選択食材 ID のリストを取得 (例:)
+            const foodIds = /*[[${foodIds}]]*/ [];
+            
             const recipeContent = document.getElementById("recipe-content");
             const loadingSection = document.getElementById("loading-section");
             const recipeSection = document.getElementById("recipe-section");
 
-            // ★ ストリーミングAPI（SSE）に接続
-            const eventSource = new EventSource(`/foods/${foodId}/recipe/generate`);
+            // 💡 複数の ID を URL パラメータ形式に変換します (?foodIds=1&foodIds=2...)
+            const params = new URLSearchParams();
+            foodIds.forEach(id => params.append('foodIds', id));
+
+            // ★ 複数選択対応のストリーミングAPI（SSE）に接続
+            const eventSource = new EventSource(`/foods/recipe/stream?${params.toString()}`);
 
             // Javaから新しい文字（データ）が届くたびに発火するイベント
             eventSource.onmessage = function(event) {
@@ -56,17 +63,13 @@
                 }
 
                 // 送られてきた文字を末尾にどんどん追加していく
-                // (改行コードやスペースがそのまま反映されるよう、必要に応じてパース処理が入る場合がありますが、Spring AIの標準的なプレーンテキストであればそのままで動くことが多いです)
                 if (event.data) {
-                    // Spring AIのストリームデータは稀に特殊な区切り文字が入る場合があるため、簡易置換や追加を行います
                     recipeContent.textContent += event.data;
                 }
             };
 
             // 生成がすべて正常に終了、またはエラーが起きた場合
             eventSource.onerror = function(event) {
-                // 通信が正常に終了しても onerror が呼ばれる仕様（readyStateがCLOSEDになる）のため、
-                // すでに文字が出力されていれば「完了」とみなして通信を閉じます
                 if (recipeContent.textContent.length > 0) {
                     eventSource.close(); 
                 } else {
@@ -74,7 +77,7 @@
                     loadingSection.innerHTML = `
                         <div class="text-danger py-4">
                             <h5>⚠️ レシピの生成に失敗しました</h5>
-                            <p class="small mb-0">Ollamaの起動状態を確認してください。</p>
+                            <p class="small mb-0">Ollamaの起動状態や、食材が正しく選択されているか確認してください。</p>
                         </div>
                     `;
                     eventSource.close();
