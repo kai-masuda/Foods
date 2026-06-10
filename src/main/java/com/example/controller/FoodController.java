@@ -41,7 +41,7 @@ public class FoodController {
     private FoodRepository foodRepository;
 
     @Autowired
-    private UserService userService; // ★ログインユーザーを取得するために追加
+    private UserService userService; 
 
     @Autowired
     private UnitService unitService;
@@ -305,7 +305,7 @@ public class FoodController {
         // 3. 他の食材も利用するようにプロンプトを構築
         String prompt = String.format(
                 "あなたは親切なプロの料理人です。メイン食材「%s」を使い、さらに可能であれば冷蔵庫にある他の食材「%s」も有効活用した、" +
-                        "家庭で簡単に作れる美味しい料理のレシピを3つ提案してください。\n" +
+                        "家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。また、冷蔵庫にないもので追加で買う必要のあるものはレシピの最後に書いといて下さい。\n" +
                         "（他の食材はすべてを使う必要はありません。相性の良いものを組み合わせてください）\n\n" +
                         "以下の構成で日本語で出力してください：\n" +
                         "1. 料理名\n" +
