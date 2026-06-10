@@ -2,6 +2,9 @@ package com.example.controller;
 
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
+import java.util.Set;//【追加】
+
+import jakarta.validation.Valid; //【追加】
 
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult; //【追加】
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -49,7 +53,11 @@ public class FoodController {
     // ★ Spring AIのOllamaクライアントを注入
     @Autowired
     private OllamaChatModel chatModel;
-
+    
+    //【追加】バリデーターの準備
+    @Autowired
+    private jakarta.validation.Validator beanValidator;
+    
     // 一覧表示 (URL: GET /foods)
     @GetMapping
     public String index(
@@ -128,24 +136,58 @@ public class FoodController {
         return "foods/create";
     }
 
-    // 登録実行 (URL: POST /foods)
+    //登録処理
     @PostMapping
     public String store(
-            @ModelAttribute Food food,
+            @Valid @ModelAttribute Food food, 
+            BindingResult bindingResult, 
             @RequestParam("categoryName") String categoryName,
             @RequestParam(value = "unit", required = false) String unit,
-            Principal principal) { // ★引数に Principal を追加
+            Principal principal, Model model) {
 
-        // 1. ログイン中のユーザー情報を取得してFoodに紐付ける
+        // 1. 手動チェック用のテンポラリオブジェクトを構築
+        Category tempCategory = new Category();
+        tempCategory.setCategoryName(categoryName);
+        
+        Unit tempUnit = new Unit();
+        tempUnit.setUnitName(unit);
+        tempCategory.setUnit(tempUnit);
+
+        // 2. Category自体のバリデーション（カテゴリ名のチェック）
+        Set<jakarta.validation.ConstraintViolation<Category>> categoryViolations = beanValidator.validate(tempCategory);
+        for (jakarta.validation.ConstraintViolation<Category> violation : categoryViolations) {
+            if (violation.getPropertyPath().toString().contains("categoryName")) {
+                model.addAttribute("categoryNameError", violation.getMessage());
+            }
+        }
+
+        // 3. Unit単体のバリデーション（単位のチェック）
+        Set<jakarta.validation.ConstraintViolation<Unit>> unitViolations = beanValidator.validate(tempUnit);
+        for (jakarta.validation.ConstraintViolation<Unit> violation : unitViolations) {
+            if (violation.getPropertyPath().toString().contains("unitName")) {
+                model.addAttribute("unitError", violation.getMessage());
+            }
+        }
+
+        // 4. エラー判定：食材名(Food)・カテゴリ・単位のいずれかに不備があれば画面に戻す
+        if (bindingResult.hasErrors() || model.containsAttribute("categoryNameError") || model.containsAttribute("unitError")) {
+            List<Category> categories = categoryService.getAllCategories();
+            model.addAttribute("allCategories", categories);
+            model.addAttribute("currentCategoryName", categoryName);
+            model.addAttribute("currentUnit", unit);
+            return "foods/create";
+        }
+
+        // 5. 正常処理
         String username = principal.getName();
         User currentUser = userService.findByUsername(username);
         food.setUser(currentUser);
 
-        // 2. カテゴリを処理して保存
         handleCategory(food, categoryName, unit);
         foodService.saveFood(food);
         return "redirect:/foods";
     }
+
 
     // 4. 編集画面の表示 (URL: GET /foods/{id}/edit)
     @GetMapping("/{id}/edit")
@@ -180,37 +222,77 @@ public class FoodController {
         return "foods/edit";
     }
 
-    // 5. 更新の実行 (URL: POST /foods/{id}/update)
     @PostMapping("/{id}/update")
     public String update(
             @PathVariable Long id,
-            @ModelAttribute Food food,
+            @Valid @ModelAttribute Food food, 
+            BindingResult bindingResult,     
             @RequestParam("categoryName") String categoryName,
             @RequestParam(value = "unit", required = false) String unit,
-            Principal principal) { // ★引数に Principal を追加
+            Principal principal,
+            Model model) {
 
-        // 1. データベースから古い食材データを取得
+        // 1. 手動チェック用のテンポラリオブジェクトを構築
+        Category tempCategory = new Category();
+        tempCategory.setCategoryName(categoryName);
+        
+        Unit tempUnit = new Unit();
+        tempUnit.setUnitName(unit);
+        tempCategory.setUnit(tempUnit);
+
+        // 2. カテゴリ名のバリデーション
+        Set<jakarta.validation.ConstraintViolation<Category>> categoryViolations = beanValidator.validate(tempCategory);
+        for (jakarta.validation.ConstraintViolation<Category> violation : categoryViolations) {
+            if (violation.getPropertyPath().toString().contains("categoryName")) {
+                model.addAttribute("categoryNameError", violation.getMessage());
+            }
+        }
+
+        // 3. 単位のバリデーション
+        Set<jakarta.validation.ConstraintViolation<Unit>> unitViolations = beanValidator.validate(tempUnit);
+        for (jakarta.validation.ConstraintViolation<Unit> violation : unitViolations) {
+            if (violation.getPropertyPath().toString().contains("unitName")) {
+                model.addAttribute("unitError", violation.getMessage());
+            }
+        }
+
+        // 4. エラー判定：既存の入力値を保持して編集画面へ戻す
+        if (bindingResult.hasErrors() || model.containsAttribute("categoryNameError") || model.containsAttribute("unitError")) {
+            List<Category> categories = categoryService.getAllCategories();
+            model.addAttribute("allCategories", categories);
+            
+            // 画面の入力値を上書き維持
+            model.addAttribute("currentCategoryName", categoryName);
+            model.addAttribute("currentUnit", unit);
+            
+            // 編集画面に必要な最大文字数の再計算
+            int maxFoodNameLength = 10;
+            try {
+                maxFoodNameLength = Food.class.getDeclaredField("foodName")
+                        .getAnnotation(jakarta.validation.constraints.Size.class).max();
+            } catch (Exception e) { }
+            model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+
+            return "foods/edit";
+        }
+
+        // 5. 正常時の更新処理
         Food existingFood = foodService.getFoodById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
 
-        // 2. 画面から入力された値を古いデータに上書き
         existingFood.setFoodName(food.getFoodName());
         existingFood.setAmount(food.getAmount());
         existingFood.setTasteLimit(food.getTasteLimit());
-       
 
-        // 3. ログイン中のユーザー情報を取得して再セット（セキュリティ担保のため）
         String username = principal.getName();
         User currentUser = userService.findByUsername(username);
         existingFood.setUser(currentUser);
 
-        // 4. 編集されたカテゴリ名と単位を元に、handleCategoryメソッドで適切に解決・紐付け
         handleCategory(existingFood, categoryName, unit);
-
-        // 5. データベースに上書き保存
         foodService.saveFood(existingFood);
         return "redirect:/foods";
     }
+
 
     // 6. 削除・消費の実行 (URL: POST /foods/{id}/delete)
     @PostMapping("/{id}/delete")

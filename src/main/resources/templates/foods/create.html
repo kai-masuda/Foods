@@ -21,6 +21,8 @@
                             th:pattern="${'.{1,' + maxFoodNameLength + '}'}" required
                             th:oninput="|checkFoodNameLength(this, ${maxFoodNameLength})|"
                             th:oninvalid="|checkFoodNameLength(this, ${maxFoodNameLength})|">
+                        <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
+                        <div th:errors="*{foodName}" style="color: red;" class="small mt-1" ></div>
                     </div>
 
                     <!-- 数量 -->
@@ -41,6 +43,8 @@
                         <!-- list属性で下のdatalistを指定します -->
                         <input type="text" id="categoryName" name="categoryName" th:value="${categoryName}"
                             class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力" required>
+                        <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
+                        <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;" class="small mt-1" ></div>
                         
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
@@ -57,6 +61,8 @@
                         <label for="unit" class="form-label">単位</label>
                         <input type="text" id="unit" name="unit" th:value="${unit}" class="form-control"
                             placeholder="例：g、パック">
+                        <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
+                        <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1" ></div>
                     </div>
 
                     <div class="d-flex gap-2">
