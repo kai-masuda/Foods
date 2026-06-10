@@ -50,9 +50,9 @@
                         <datalist id="categoryOptions">
                             <!-- th:value の中身を |カテゴリ名（単位）| の形式に変更し、JavaScript用に個別データを持たせます -->
                             <option th:each="c : ${allCategories}" 
-                                    th:value="|${c.categoryName}（${c.unit}）|" 
+                                    th:value="|${c.categoryName}（${c.unit.unitName}）|" 
                                     th:data-category="${c.categoryName}"
-                                    th:data-unit="${c.unit}"></option>
+                                    th:data-unit="${c.unit.unitName}"></option>
                         </datalist>
                     </div>
 

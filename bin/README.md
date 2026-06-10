@@ -1,4 +1,4 @@
-http://localhost:8080/ingredients
+http://localhost:8080/foods
 
 #ディレクトリ構成
 food-management-app/ (プロジェクトのルート)

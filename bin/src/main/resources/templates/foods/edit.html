@@ -1,43 +1,70 @@
 <!DOCTYPE html>
-<html xmlns:th="http://thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <title>食材編集</title>
-    <link href="https://jsdelivr.net" rel="stylesheet">
+    <link th:href="@{/css/style.css}" rel="stylesheet">
 </head>
+
 <body class="bg-light">
     <div class="container mt-5" style="max-width: 600px;">
         <div class="card shadow-sm">
             <div class="card-body p-4">
                 <h1 class="h3 card-title mb-4">食材の編集</h1>
-                
+
                 <form th:action="@{/foods/{id}/update(id=${food.id})}" th:object="${food}" method="post">
                     <!-- 食材名 -->
                     <div class="mb-3">
                         <label for="foodName" class="form-label">食材名</label>
-                        <input type="text" th:field="*{foodName}" class="form-control" required>
+                        <input type="text" th:field="*{foodName}" class="form-control" id="foodNameInput"
+                            th:pattern="${'.{1,' + maxFoodNameLength + '}'}" required
+                            th:oninput="|checkFoodNameLength(this, ${maxFoodNameLength})|"
+                            th:oninvalid="|checkFoodNameLength(this, ${maxFoodNameLength})|">
                     </div>
-                    
+
                     <!-- 数量 -->
                     <div class="mb-3">
                         <label for="amount" class="form-label">量</label>
-                        <input type="number" th:field="*{amount}" class="form-control" min="1" required>
+                        <input type="number" th:field="*{amount}" class="form-control" step="any" min="0.1" required>
                     </div>
-                    
+
                     <!-- 賞味期限 -->
                     <div class="mb-3">
-                        <label for="taste_limit" class="form-label">賞味・消費期限</label>
-                        <input type="date" th:field="*{taste_limit}" class="form-control" required>
+                        <label for="tasteLimit" class="form-label">賞味・消費期限</label>
+                        <input type="date" th:field="*{tasteLimit}" class="form-control" max="9999-12-31" required>
                     </div>
-                    
-                    <!-- カテゴリ選択 -->
-                    <div class="mb-4">
-                        <label for="category" class="form-label">カテゴリ</label>
-                        <select th:field="*{category}" class="form-select" required>
-                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName + ' (' + cat.unit + ')'}" th:selected="${cat.id == food.category?.id}"></option>
-                        </select>
+
+                    <!-- 【修正】カテゴリ名の入力（datalistを紐付け） -->
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">カテゴリ名</label>
+                        <!-- パターンA：カテゴリがすでに登録されている場合（名前を表示） -->
+                        <input th:if="${food.category != null}" type="text" id="categoryName" name="categoryName"
+                            th:value="${food.category.categoryName}" class="form-control" list="categoryOptions"
+                            autocomplete="off" placeholder="選択または新規入力" required>
+
+                        <!-- パターンB：カテゴリが未登録（null）の場合（空欄を表示） -->
+                        <input th:unless="${food.category != null}" type="text" id="categoryName" name="categoryName"
+                            value="" class="form-control" list="categoryOptions" autocomplete="off"
+                            placeholder="選択または新規入力" required>
+
+                        <!-- 既存のカテゴリ一覧を候補として出力 -->
+                        <datalist id="categoryOptions">
+                            <option th:each="c : ${allCategories}" 
+                                    th:value="${c.categoryName + '（' + c.unit.unitName + '）'}"
+                                    th:data-category="${c.categoryName}" 
+                                    th:data-unit="${c.unit.unitName}"></option>
+                        </datalist>
                     </div>
-                    
+
+                    <!-- 【修正】単位の入力（現在の単位を初期値としてセット、requiredは外す） -->
+                    <div class="mb-4" id="unitInputArea">
+                        <label for="unit" class="form-label">単位</label>
+                        <input type="text" id="unit" name="unit"
+                            th:value="${food.category != null &&food.category.unit != null ? food.category.unit.unitName : ''}" class="form-control"
+                            placeholder="例：g、パック（空欄なら既存の単位）">
+                    </div>
+
                     <div class="d-flex gap-2">
                         <button type="submit" class="btn btn-success w-100">更新する</button>
                         <a th:href="@{/foods}" class="btn btn-secondary w-100">戻る</a>
@@ -46,5 +73,58 @@
             </div>
         </div>
     </div>
+
+    <script>
+            function checkFoodNameLength(input, maxLength) {
+                if (input.validity.valueMissing) {
+                    input.setCustomValidity("このフィールドに入力してください。");
+                }
+                else if (input.validity.patternMismatch) {
+                    input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
+                }
+                else {
+                    input.setCustomValidity("");
+                }
+            }
+
+            // ★重複していた処理を1つに綺麗にまとめました
+            document.getElementById('categoryName').addEventListener('input', function () {
+                const inputValue = this.value.trim(); // 例: "きのこ（個）" または "きのこ"
+                const unitInput = document.getElementById('unit');
+
+                // datalist内のオプションを検索
+                const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
+
+                if (option) {
+                    // 既存の「カテゴリ名（単位）」が選択された場合の処理
+                    const realCategoryName = option.getAttribute('data-category'); // "きのこ"
+                    const existingUnit = option.getAttribute('data-unit');         // "個"
+
+                    // 1. カテゴリ入力欄の表示をカッコなしの綺麗な名前に上書き
+                    this.value = realCategoryName;
+
+                    // 2. 単位入力欄に既存の単位を自動セット
+                    unitInput.value = existingUnit;
+                    unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
+                } else {
+                    // 手動でタイピング中、または一致するものがない場合
+                    // 単位入力欄の値はそのままにし、プレースホルダーだけ標準に戻す
+                    unitInput.placeholder = "例：g、パック";
+                }
+            });
+
+            // 画面を開いたときに五十音順に並び替える処理
+            document.addEventListener("DOMContentLoaded", () => {
+                const datalist = document.getElementById("categoryOptions");
+                if (!datalist) return;
+
+                const options = Array.from(datalist.options);
+                options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
+
+                datalist.innerHTML = "";
+                options.forEach(option => datalist.appendChild(option));
+            });
+        </script>
 </body>
+
 </html>

@@ -13,24 +13,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Data
-@NoArgsConstructor
+@Data//ゲッターセッターを自動作成するアノテーション
+@NoArgsConstructor//コンストラクター自動生成
 @AllArgsConstructor
-public class User {
-
+public class Unit {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    
+    @Column(length =  10, nullable = false)
+    @NotBlank(message = "カテゴリ名は必須です")
+    @Size(max = 10)
+    private String unitName;
 
-    @NotBlank(message = "ユーザー名は必須です")
-    @Column(nullable = false, unique = true)
-    private String username;
-
-    @NotBlank(message = "パスワードは必須です")
-    @Column(nullable = false)
-    @Size(min = 6, max=20, message = "パスワードは{min}文字以上{max}文字以下で入力して下さい")
-    private String password;
-
-    @Column(nullable = false)
-    private String role = "USER";
 }
