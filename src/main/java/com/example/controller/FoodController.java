@@ -197,7 +197,7 @@ public class FoodController {
         existingFood.setFoodName(food.getFoodName());
         existingFood.setAmount(food.getAmount());
         existingFood.setTasteLimit(food.getTasteLimit());
-        existingFood.setCategory(food.getCategory());
+       
 
         // 3. ログイン中のユーザー情報を取得して再セット（セキュリティ担保のため）
         String username = principal.getName();
