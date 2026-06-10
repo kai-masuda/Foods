@@ -2,6 +2,9 @@ package com.example.controller;
 
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
+import java.util.Set;//【追加】
+
+import jakarta.validation.Valid; //【追加】
 
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult; //【追加】
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -44,7 +48,11 @@ public class FoodController {
     // ★ Spring AIのOllamaクライアントを注入
     @Autowired
     private OllamaChatModel chatModel;
-
+    
+    //【追加】バリデーターの準備
+    @Autowired
+    private jakarta.validation.Validator beanValidator;
+    
     // 一覧表示 (URL: GET /foods)
     @GetMapping
     public String index(
@@ -105,12 +113,55 @@ public class FoodController {
     }
 
     // 登録実行 (URL: POST /foods)
+    //【修正】文字以外を入力した場合にエラーを出してエラー画面に戻す
     @PostMapping
     public String store(
-            @ModelAttribute Food food,
+            @Valid @ModelAttribute Food food, //@Valid追加
+            BindingResult bindingResult, // エラーの結果を記録する場所
             @RequestParam("categoryName") String categoryName,
             @RequestParam(value = "unit", required = false) String unit,
-            Principal principal) { // ★引数に Principal を追加
+            Principal principal, Model model) { // ★引数に Principal を追加 //エラー時に画面に戻すためにModel追加
+
+     // まず最初に、foodオブジェクトの中に画面から来たカテゴリ名と単位を正しくセットする
+        Category currentCategory = food.getCategory();
+        if (currentCategory == null) {
+            currentCategory = new Category();
+            food.setCategory(currentCategory);
+        }
+        currentCategory.setCategoryName(categoryName);
+        currentCategory.setUnit(unit);
+        
+       
+         // 手動チェックを実行し、違反リスト（violations）を受け取る
+            Set<jakarta.validation.ConstraintViolation<Category>> violations = beanValidator.validate(food.getCategory());
+            
+            for (jakarta.validation.ConstraintViolation<Category> violation : violations) {
+             // エラーが起きた場所の名前（文字列）を取得
+                String propertyPath = violation.getPropertyPath().toString();
+         
+            if (propertyPath.contains("categoryName")) {
+                // カテゴリ名のエラーメッセージを画面に送る
+                model.addAttribute("categoryNameError", violation.getMessage());
+                
+            } else if (propertyPath.contains("unit")) {
+                // 単位のエラーメッセージを画面に送る
+                model.addAttribute("unitError", violation.getMessage());
+            }
+        }
+        
+        
+        
+        // 食材名、カテゴリ名、単位のどれか1つでもエラーが出た場合、画面へ戻す
+        if (bindingResult.hasErrors() || model.containsAttribute("categoryNameError") || model.containsAttribute("unitError")) {
+            List<Category> categories = categoryService.getAllCategories();
+            model.addAttribute("allCategories", categories);
+            
+         //画面に戻ったときに、入力していた文字が消えないようにする
+            model.addAttribute("currentCategoryName", categoryName);
+            model.addAttribute("currentUnit", unit);
+            
+            return "foods/create"; // 登録画面（HTML）をそのまま再表示
+        }
 
         // 1. ログイン中のユーザー情報を取得してFoodに紐付ける
         String username = principal.getName();
