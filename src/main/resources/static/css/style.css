@@ -25,7 +25,7 @@ table {
     margin-top: 15px;
 }
 th, td {
-    padding: 10px;
+    padding: 9px;
     border-bottom: 1px solid #ddd;
     text-align: left;
 }
@@ -39,12 +39,12 @@ tr:hover { background-color: #f1f1f1; }
     border-radius: 4px;
     cursor: pointer;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
     display: inline-block;
 }
 .btn-primary { background-color: #007bff; color: white; }
 .btn-success { background-color: #007bff; color: white; }
-.btn-warning { background-color: #ffc107; color: #212529; }
+.btn-warning { background-color: #ffc107; color: black; }
 .btn-danger { background-color: #dc3545; color: white; }
 .btn-secondary { background-color: #6c757d; color: white; }
 
@@ -64,15 +64,18 @@ tr:hover { background-color: #f1f1f1; }
 .gap-1 { gap: 5px; }
 .gap-2 { gap: 10px; }
 
-/* 期限切れ（太字 ＋ 読みやすい赤） */
+/* 期限切れ */
 .text-expired {
     color: #dc3545 !important;
 }
-/* 期限間近（太字 ＋ 読みやすいオレンジ） */
+/* 期限間近*/
 .text-urgent {
     color: #fd7e14 !important;
 }
 
 .success {
     color: #00aa00;
+}
+.error{
+    color:red;
 }
