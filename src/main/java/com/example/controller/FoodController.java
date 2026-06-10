@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.entity.Category;
 import com.example.entity.Food;
+import com.example.entity.Unit;
 import com.example.entity.User; // ★Userエンティティをインポート
 import com.example.repository.FoodRepository;
+import com.example.service.UnitService;
 import com.example.service.UserService; // ★UserServiceをインポート
 
 import reactor.core.publisher.Flux;
@@ -40,6 +42,9 @@ public class FoodController {
 
     @Autowired
     private UserService userService; // ★ログインユーザーを取得するために追加
+    
+    @Autowired
+    private UnitService unitService;
     
     // ★ Spring AIのOllamaクライアントを注入
     @Autowired
@@ -128,6 +133,15 @@ public class FoodController {
         model.addAttribute("food", food);
 
         List<Category> categories = categoryService.getAllCategories();
+        
+        for (Category c : categories) {
+            if (c.getUnit() == null) {
+                Unit dummyUnit = new Unit();
+                dummyUnit.setUnitName("個"); // デフォルトの単位
+                c.setUnit(dummyUnit);
+            }
+        }
+        
         model.addAttribute("allCategories", categories);
 
         int maxFoodNameLength = 10;
@@ -199,46 +213,38 @@ public class FoodController {
         return "redirect:/foods";
     }
 
-    private void handleCategory(Food food, String categoryName, String unit) {
-        if (categoryName == null || categoryName.trim().isEmpty()) {
+    private void handleCategory(Food food, String categoryName, String unitStr) {
+        if (categoryName == null || categoryName.strip().isEmpty()) {
             return;
         }
-        String trimmedName = categoryName.trim();
+        String trimmedCategoryName = categoryName.strip();
+        
+        Unit targetUnit = unitService.getOrCreateUnit(unitStr);
 
         List<Category> allCategories = categoryService.getAllCategories();
 
         Category targetCategory = null;
-        String targetUnit = (unit != null) ? unit.trim() : "";
 
-        if (targetUnit.isEmpty()) {
-            targetCategory = allCategories.stream()
-                    .filter(c -> c.getCategoryName().equals(trimmedName))
-                    .findFirst()
-                    .orElse(null);
-
-            if (targetCategory != null) {
-                targetUnit = targetCategory.getUnit();
-            } else {
-                targetUnit = "個";
+        for(Category kizonCategory : allCategories) {
+            if (kizonCategory.getCategoryName().equals(trimmedCategoryName)&&
+                kizonCategory.getUnit().getId().equals(targetUnit.getId())) {
+                
+                targetCategory = kizonCategory;
+                break;
             }
-        } else {
-            String finalUnit = targetUnit;
-            targetCategory = allCategories.stream()
-                    .filter(c -> c.getCategoryName().equals(trimmedName) && finalUnit.equals(c.getUnit()))
-                    .findFirst()
-                    .orElse(null);
         }
-
+        
         if (targetCategory == null) {
             Category newCategory = new Category();
-            newCategory.setCategoryName(trimmedName);
+            newCategory.setCategoryName(trimmedCategoryName);
             newCategory.setUnit(targetUnit);
-
+            
             targetCategory = categoryService.saveCategory(newCategory);
+            
         }
-
         food.setCategory(targetCategory);
     }
+    
     
     /**
      * 1. ユーザーがボタンを押したら、まずは一瞬でローディング画面を開く処理
@@ -273,7 +279,7 @@ public class FoodController {
             "ただし、以下のルールを守ってください \n" + 
             "・食べ物ではないモノが指定された際には、「食べ物以外は受け付けません」という旨の文章を返し、レシピは表示しない。 \n" +
             "・一般的に食べ物とされていない動物や植物（ライオンやカメ、虫など）が指定された際には、「一般的に食用とされていないものは受け付けません」という旨の文章を返し、レシピは表示しない。\n" +
-            "・文章はできるだけ日本語を使用する。"
+            "・必ず日本語を使用する。"
             ,
             food.getFoodName()
         );
