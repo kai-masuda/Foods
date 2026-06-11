@@ -82,6 +82,7 @@
         </div>
         <br>
 
+        <form id="deleteForm" th:action="@{/foods}" method="post" style="display: none;"></form>
         <form th:action="@{/foods/recipe/generate}" method="get">
             <div class="d-flex gap-2 mb-3">
                 <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
@@ -132,14 +133,18 @@
                                             class="btn btn-sm btn-warning">編集</a>
     
                                         <!-- 数量を指定して消費（削除）するフォーム -->
-                                        <form th:action="@{/foods/{id}/delete(id=${food.id})}" method="post"
-                                            class="d-flex gap-1 align-items-center">
-                                            <input type="number" name="reduceAmount" class="form-control form-control-sm"
+                                        <div class="d-flex gap-1 align-items-center">
+                                            <input type="number" th:id="'reduceAmount-' + ${food.id}" name="reduceAmount" class="form-control form-control-sm"
                                                 style="width: 70px;" min="0.1" th:max="${food.amount}" value="1" step="any"
                                                 required>
-                                            <button type="submit" class="btn btn-sm btn-danger"
-                                                style="white-space: nowrap;">消費</button>
-                                        </form>
+                                            
+                                            <button type="button" 
+                                                    th:onclick="'submitDelete(' + ${food.id} + ')'"
+                                                    class="btn btn-sm btn-danger"
+                                                    style="white-space: nowrap;">
+                                                消費
+                                            </button>
+                                        </div>
                                                                            
                                     </div>
                                 </td>
@@ -153,6 +158,22 @@
             </div>
         </form>
     </div>
+    <script th:inline="javascript">
+        function submitDelete(foodId) {
+            // 1. 該当行の入力された数量を取得
+            const amountInput = document.getElementById('reduceAmount-' + foodId);
+            const reduceAmount = amountInput.value;
+            
+            // 2. 裏方フォームを取得
+            const deleteForm = document.getElementById('deleteForm');
+            
+            // 3. 送信先URLを正しくセット
+            deleteForm.action = '/foods/' + foodId + '/delete?reduceAmount=' + reduceAmount;
+            
+            // 4. 送信！ (これでThymeleafが生成したCSRFトークンが一緒に送られます)
+            deleteForm.submit();
+        }
+    </script>
 </body>
 
 </html>
