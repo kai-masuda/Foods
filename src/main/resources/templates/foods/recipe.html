@@ -52,12 +52,11 @@
                 return;
             }
 
-            // ★ 単一食材専用の、一番軽いストリーミングAPI（SSE）に直接接続します
+            
             const eventSource = new EventSource(`/foods/${foodId}/recipe/generate`);
 
             // Javaから新しい文字（データ）が届くたびに発火するイベント
             eventSource.onmessage = function(event) {
-                // 最初の1文字目が届いた瞬間にローディングを隠して結果枠を出す
                 if (recipeSection.classList.contains("d-none")) {
                     loadingSection.classList.add("d-none");
                     recipeSection.classList.remove("d-none");

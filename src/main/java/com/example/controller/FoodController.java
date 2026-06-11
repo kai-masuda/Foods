@@ -416,7 +416,7 @@ public class FoodController {
             "1. 材料（分量）\n" +
             "2. 作り方の手順\n" +
             "3. 美味しく作るためのコツ",
-            mainFood.getFoodName());
+            mainFoodsText);
         
         // 末尾に [DONE] フラグを付与して、安全にフロントに終了を伝える
         return chatModel.stream(prompt)

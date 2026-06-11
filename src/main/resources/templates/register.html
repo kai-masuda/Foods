@@ -57,10 +57,10 @@
                 <!-- パスワード -->
                 <div class="mb-4">
                     <label for="password" class="form-label">パスワード:</label>
-                    <input type="password" id="password" th:field="*{password}" class="form-control"  required oninput="checkPasswordMatch()">
+                    <input type="password" id="password" th:field="*{password}" minlength="6" maxlength="12"class="form-control"  required oninput="checkPasswordMatch()">
                     <label for="passwordConfirm" class="form-label"
                         style="margin-top: 15px; display: block;">パスワード確認:</label>
-                    <input type="password" id="passwordConfirm" class="form-control" required oninput="checkPasswordMatch()">
+                    <input type="password" id="passwordConfirm" minlength="6" maxlength="12"class="form-control" required oninput="checkPasswordMatch()">
 
                     <!-- 不一致エラー」 -->
                         <span id="passwordError" class="error" ></span>

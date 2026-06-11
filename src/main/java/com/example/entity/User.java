@@ -28,7 +28,7 @@ public class User {
     private String username;
 
     @NotBlank(message = "パスワードは必須です")
-    @Size(min=6 ,max=255,message="パスワードは{min}文字以上{max}文字以下で入力してください")
+    //@Size(min=6 ,max=255,message="パスワードは{min}文字以上{max}文字以下で入力してください")
     private String password;
 
 
