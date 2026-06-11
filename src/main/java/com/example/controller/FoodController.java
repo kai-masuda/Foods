@@ -3,13 +3,13 @@ package com.example.controller;
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
 import java.util.Set;//【追加】
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid; //【追加】
 
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult; //【追加】
@@ -365,16 +365,24 @@ public class FoodController {
         return "foods/recipe";
     }
 
-    /**
-     * 2. 選択された1つの食材のみを考慮して、文字をストリーミング出力するAPI
-     * URL: GET /foods/{id}/recipe/generate
-     */
-    @GetMapping(value = "/{id}/recipe/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    
+    @GetMapping("/recipe/generate")
+    public String generateRecipeFromMultipleFoods(
+            @RequestParam(name = "foodIds", required = false, defaultValue = "") List<Long> foodIds, 
+            Model model) {
+        
+        // チェックされたIDのリストをそのまま画面（JavaScript）に引き渡す
+        model.addAttribute("foodIds", foodIds);
+        
+        return "foods/recipe_multiple"; // 新しく作るHTMLの名前
+    }
+    
+    @GetMapping(value = "/recipe/stream", produces = "text/event-stream;charset=UTF-8")
     @ResponseBody
-    public Flux<String> generateRecipeStream(@PathVariable Long id) {
-        Food mainFood = foodRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id: " + id));
-
+    public Flux<String> streamRecipe(@RequestParam("foodIds") List<Long> foodIds) {
+        List<Food> selectedFoods = foodRepository.findAllById(foodIds);
+        String mainFoodsText = selectedFoods.stream().map(Food::getFoodName).collect(Collectors.joining("、"));
+        
         String prompt = String.format(
             "# あなたの役割\n" +
             "あなたは日本の家庭料理に精通した、親切で丁寧なプロの料理人です。料理初心者のユーザーに対して、指定された食材を使った定番の家庭料理レシピを3つ提案してください。\n\n" +
@@ -414,5 +422,4 @@ public class FoodController {
         return chatModel.stream(prompt)
                 .concatWith(Flux.just("\n[DONE]"));
     }
-
 }
