@@ -42,11 +42,13 @@
                         <input th:if="${food.category != null}" type="text" id="categoryName" name="categoryName"
                             th:value="${food.category.categoryName}" class="form-control" list="categoryOptions"
                             autocomplete="off" placeholder="選択または新規入力" required>
+                            
 
                         <!-- パターンB：カテゴリが未登録（null）の場合（空欄を表示） -->
                         <input th:unless="${food.category != null}" type="text" id="categoryName" name="categoryName"
                             value="" class="form-control" list="categoryOptions" autocomplete="off"
                             placeholder="選択または新規入力" required>
+                            <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;" class="small mt-1" ></div>
 
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
@@ -63,6 +65,8 @@
                         <input type="text" id="unit" name="unit"
                             th:value="${food.category != null &&food.category.unit != null ? food.category.unit.unitName : ''}" class="form-control"
                             placeholder="例：g、パック（空欄なら既存の単位）">
+                            <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1" ></div>
+                            
                     </div>
 
                     <div class="d-flex gap-2">
