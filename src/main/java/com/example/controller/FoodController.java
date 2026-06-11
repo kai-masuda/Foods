@@ -3,13 +3,13 @@ package com.example.controller;
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
 import java.util.Set;//【追加】
+import java.util.stream.Collectors;
 
 import jakarta.validation.Valid; //【追加】
 
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult; //【追加】
@@ -365,29 +365,33 @@ public class FoodController {
         return "foods/recipe";
     }
 
-    /**
-     * 2. 選択された1つの食材のみを考慮して、文字をストリーミング出力するAPI
-     * URL: GET /foods/{id}/recipe/generate
-     */
-    @GetMapping(value = "/{id}/recipe/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    
+    @GetMapping("/recipe/generate")
+    public String generateRecipeFromMultipleFoods(
+            @RequestParam(name = "foodIds", required = false, defaultValue = "") List<Long> foodIds, 
+            Model model) {
+        
+        // チェックされたIDのリストをそのまま画面（JavaScript）に引き渡す
+        model.addAttribute("foodIds", foodIds);
+        
+        return "foods/recipe_multiple"; // 新しく作るHTMLの名前
+    }
+    
+    @GetMapping(value = "/recipe/stream", produces = "text/event-stream;charset=UTF-8")
     @ResponseBody
-    public Flux<String> generateRecipeStream(@PathVariable Long id) {
-        Food mainFood = foodRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id: " + id));
-
+    public Flux<String> streamRecipe(@RequestParam("foodIds") List<Long> foodIds) {
+        List<Food> selectedFoods = foodRepository.findAllById(foodIds);
+        String mainFoodsText = selectedFoods.stream().map(Food::getFoodName).collect(Collectors.joining("、"));
+        
         String prompt = String.format(
                 "あなたは親切なプロの料理人です。食材「%s」と一般的な調味料を使い、" +
-                        "家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。\n\n" +
-                        "以下の構成で日本語で出力してください：\n" +
-                        "1. 料理名\n" +
-                        "2. 材料（分量）\n" +
-                        "3. 作り方の手順\n" +
-                        "4. 美味しく作るためのコツ",
-                mainFood.getFoodName());
+                "家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。\n\n" +
+                "以下の構成に従い、適切なマークダウン形式を用いて日本語で出力してください：\n" +
+                "### 1. 料理名\n### 2. 材料（分量）\n### 3. 作り方の手順\n### 4. 美味しく作るためのコツ",
+                mainFoodsText);
 
-        // 末尾に [DONE] フラグを付与して、安全にフロントに終了を伝える
-        return chatModel.stream(prompt)
-                .concatWith(Flux.just("\n[DONE]"));
+        return chatModel.stream(prompt).concatWith(Flux.just("\n[DONE]"));
     }
-
+    
+    
 }
