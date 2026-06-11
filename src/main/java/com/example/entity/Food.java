@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;  // 【追加】
 import jakarta.persistence.PreUpdate;  // 【追加】
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -35,7 +36,12 @@ public class Food {
     
     @Column(length = 255, nullable = false)
     @NotBlank(message = "食材名は必須です")
-    @Size(max = 20)
+    @Size(max = 20, message = "食材名は20文字以内で入力してください")
+    //【追加】日本語（ひらがな・カタカナ・漢字）と英字のみ許可（数字や記号はエラー）
+    @Pattern(
+            regexp = "^[a-zA-Zぁ-んァ-ヶー一-龠々]+$",
+            message = "食材名には文字のみ入力してください(数字や記号は使用できません)"
+            )
     private String foodName;
     
     @Column(nullable = false)

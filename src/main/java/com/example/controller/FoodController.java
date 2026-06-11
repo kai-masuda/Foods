@@ -2,6 +2,9 @@ package com.example.controller;
 
 import java.security.Principal; // ★ログインユーザー情報取得のために追加
 import java.util.List;
+import java.util.Set;//【追加】
+
+import jakarta.validation.Valid; //【追加】
 
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +12,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult; //【追加】
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,7 +45,7 @@ public class FoodController {
     private FoodRepository foodRepository;
 
     @Autowired
-    private UserService userService; 
+    private UserService userService;
 
     @Autowired
     private UnitService unitService;
@@ -49,6 +53,10 @@ public class FoodController {
     // ★ Spring AIのOllamaクライアントを注入
     @Autowired
     private OllamaChatModel chatModel;
+
+    //【追加】バリデーターの準備
+    @Autowired
+    private jakarta.validation.Validator beanValidator;
 
     // 一覧表示 (URL: GET /foods)
     @GetMapping
@@ -76,24 +84,24 @@ public class FoodController {
         Sort sortOrder = direction.equalsIgnoreCase("desc") ? Sort.by(sort).descending() : Sort.by(sort).ascending();
 
         List<Category> allCategories = categoryService.getAllCategories();
-        
+
         //重複しているカテゴリ名をまとめる（カテゴリ絞り込みのため）
         List<String> bundleCategoryNames = allCategories.stream()
-                .map(Category :: getCategoryName)
+                .map(Category::getCategoryName)
                 .distinct()
                 .toList();
-        
+
         model.addAttribute("categoryNames", bundleCategoryNames);
-        
+
         //htmlのth:selectedの判定用
         model.addAttribute("currentCategoryName", categoryNames);
-        
+
         // 2. ログインユーザーのIDを検索条件に渡して、自分の食材だけを取得する
         // (※FoodService側に searchFoodsByUserId メソッドを追加する必要があります)
         List<Food> foods = foodService.searchFoodsByUserId(userId, keyword, categoryNames, sortOrder);
 
         model.addAttribute("foods", foods);
-        
+
         model.addAttribute("currentKeyword", keyword);
         model.addAttribute("currentCategoryId", categoryId);
         model.addAttribute("currentSort", sort);
@@ -128,20 +136,54 @@ public class FoodController {
         return "foods/create";
     }
 
-    // 登録実行 (URL: POST /foods)
+    //登録処理
     @PostMapping
     public String store(
-            @ModelAttribute Food food,
+            @Valid @ModelAttribute Food food,
+            BindingResult bindingResult,
             @RequestParam("categoryName") String categoryName,
             @RequestParam(value = "unit", required = false) String unit,
-            Principal principal) { // ★引数に Principal を追加
+            Principal principal, Model model) {
 
-        // 1. ログイン中のユーザー情報を取得してFoodに紐付ける
+        // 1. 手動チェック用のテンポラリオブジェクトを構築
+        Category tempCategory = new Category();
+        tempCategory.setCategoryName(categoryName);
+
+        Unit tempUnit = new Unit();
+        tempUnit.setUnitName(unit);
+        tempCategory.setUnit(tempUnit);
+
+        // 2. Category自体のバリデーション（カテゴリ名のチェック）
+        Set<jakarta.validation.ConstraintViolation<Category>> categoryViolations = beanValidator.validate(tempCategory);
+        for (jakarta.validation.ConstraintViolation<Category> violation : categoryViolations) {
+            if (violation.getPropertyPath().toString().contains("categoryName")) {
+                model.addAttribute("categoryNameError", violation.getMessage());
+            }
+        }
+
+        // 3. Unit単体のバリデーション（単位のチェック）
+        Set<jakarta.validation.ConstraintViolation<Unit>> unitViolations = beanValidator.validate(tempUnit);
+        for (jakarta.validation.ConstraintViolation<Unit> violation : unitViolations) {
+            if (violation.getPropertyPath().toString().contains("unitName")) {
+                model.addAttribute("unitError", violation.getMessage());
+            }
+        }
+
+        // 4. エラー判定：食材名(Food)・カテゴリ・単位のいずれかに不備があれば画面に戻す
+        if (bindingResult.hasErrors() || model.containsAttribute("categoryNameError")
+                || model.containsAttribute("unitError")) {
+            List<Category> categories = categoryService.getAllCategories();
+            model.addAttribute("allCategories", categories);
+            model.addAttribute("currentCategoryName", categoryName);
+            model.addAttribute("currentUnit", unit);
+            return "foods/create";
+        }
+
+        // 5. 正常処理
         String username = principal.getName();
         User currentUser = userService.findByUsername(username);
         food.setUser(currentUser);
 
-        // 2. カテゴリを処理して保存
         handleCategory(food, categoryName, unit);
         foodService.saveFood(food);
         return "redirect:/foods";
@@ -180,34 +222,75 @@ public class FoodController {
         return "foods/edit";
     }
 
-    // 5. 更新の実行 (URL: POST /foods/{id}/update)
     @PostMapping("/{id}/update")
     public String update(
             @PathVariable Long id,
-            @ModelAttribute Food food,
+            @Valid @ModelAttribute Food food,
+            BindingResult bindingResult,
             @RequestParam("categoryName") String categoryName,
             @RequestParam(value = "unit", required = false) String unit,
-            Principal principal) { // ★引数に Principal を追加
+            Principal principal,
+            Model model) {
 
-        // 1. データベースから古い食材データを取得
+        // 1. 手動チェック用のテンポラリオブジェクトを構築
+        Category tempCategory = new Category();
+        tempCategory.setCategoryName(categoryName);
+
+        Unit tempUnit = new Unit();
+        tempUnit.setUnitName(unit);
+        tempCategory.setUnit(tempUnit);
+
+        // 2. カテゴリ名のバリデーション
+        Set<jakarta.validation.ConstraintViolation<Category>> categoryViolations = beanValidator.validate(tempCategory);
+        for (jakarta.validation.ConstraintViolation<Category> violation : categoryViolations) {
+            if (violation.getPropertyPath().toString().contains("categoryName")) {
+                model.addAttribute("categoryNameError", violation.getMessage());
+            }
+        }
+
+        // 3. 単位のバリデーション
+        Set<jakarta.validation.ConstraintViolation<Unit>> unitViolations = beanValidator.validate(tempUnit);
+        for (jakarta.validation.ConstraintViolation<Unit> violation : unitViolations) {
+            if (violation.getPropertyPath().toString().contains("unitName")) {
+                model.addAttribute("unitError", violation.getMessage());
+            }
+        }
+
+        // 4. エラー判定：既存の入力値を保持して編集画面へ戻す
+        if (bindingResult.hasErrors() || model.containsAttribute("categoryNameError")
+                || model.containsAttribute("unitError")) {
+            List<Category> categories = categoryService.getAllCategories();
+            model.addAttribute("allCategories", categories);
+
+            // 画面の入力値を上書き維持
+            model.addAttribute("currentCategoryName", categoryName);
+            model.addAttribute("currentUnit", unit);
+
+            // 編集画面に必要な最大文字数の再計算
+            int maxFoodNameLength = 10;
+            try {
+                maxFoodNameLength = Food.class.getDeclaredField("foodName")
+                        .getAnnotation(jakarta.validation.constraints.Size.class).max();
+            } catch (Exception e) {
+            }
+            model.addAttribute("maxFoodNameLength", maxFoodNameLength);
+
+            return "foods/edit";
+        }
+
+        // 5. 正常時の更新処理
         Food existingFood = foodService.getFoodById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
 
-        // 2. 画面から入力された値を古いデータに上書き
         existingFood.setFoodName(food.getFoodName());
         existingFood.setAmount(food.getAmount());
         existingFood.setTasteLimit(food.getTasteLimit());
-       
 
-        // 3. ログイン中のユーザー情報を取得して再セット（セキュリティ担保のため）
         String username = principal.getName();
         User currentUser = userService.findByUsername(username);
         existingFood.setUser(currentUser);
 
-        // 4. 編集されたカテゴリ名と単位を元に、handleCategoryメソッドで適切に解決・紐付け
         handleCategory(existingFood, categoryName, unit);
-
-        // 5. データベースに上書き保存
         foodService.saveFood(existingFood);
         return "redirect:/foods";
     }
@@ -270,69 +353,41 @@ public class FoodController {
     }
 
     /**
-     * 1. ユーザーがボタンを押したら、まずは一瞬でローディング画面を開く処理
+     * 1. ユーザーがボタンを押したとき、一瞬でローディング画面を開く処理
      * URL: GET /foods/{id}/recipe
      */
     @GetMapping("/{id}/recipe")
     public String recipePage(@PathVariable Long id, Model model) {
-        // 食材情報をリポジトリ（またはfoodService）から取得して画面に渡す
-        Food food = foodRepository.findById(id).orElseThrow();
+        Food food = foodRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id:" + id));
+        // 単一のfoodオブジェクトを「food」という名前で画面に渡す
         model.addAttribute("food", food);
-
-        // フォルダ構造に合わせて templates/foods/recipe.html を呼び出す
         return "foods/recipe";
     }
 
     /**
-     * 2. ★修正：他の所持食材も考慮して、文字をどんどんストリーミング出力するAPI
-     * produces = MediaType.TEXT_EVENT_STREAM_VALUE を指定してSSE通信にします
+     * 2. 選択された1つの食材のみを考慮して、文字をストリーミング出力するAPI
+     * URL: GET /foods/{id}/recipe/generate
      */
     @GetMapping(value = "/{id}/recipe/generate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @ResponseBody
-    public Flux<String> generateRecipeStream(@PathVariable Long id, Principal principal) { // ★ 引数に Principal を追加
-        // 1. メインとなる選択された食材を取得
-        Food mainFood = foodRepository.findById(id).orElseThrow();
+    public Flux<String> generateRecipeStream(@PathVariable Long id) {
+        Food mainFood = foodRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid food Id: " + id));
 
-        // 2. ログインユーザーの他の食材リストをテキスト化する
-        String otherFoodsText = "なし";
-        if (principal != null) {
-            String username = principal.getName();
-            User currentUser = userService.findByUsername(username);
-            if (currentUser != null) {
-                // ユーザーIDに紐づく食材リストをすべて取得
-                List<Food> allFoods = foodRepository.findByUserId(currentUser.getId(), org.springframework.data.domain.Sort.unsorted());
-
-                // メイン食材以外の名前をカンマ区切りで抽出
-                List<String> otherFoodNames = allFoods.stream()
-                        .map(Food::getFoodName)
-                        .filter(name -> !name.equals(mainFood.getFoodName()))
-                        .toList();
-
-                if (!otherFoodNames.isEmpty()) {
-                    otherFoodsText = String.join("、", otherFoodNames);
-                }
-            }
-        }
-
-        // 3. 他の食材も利用するようにプロンプトを構築
         String prompt = String.format(
-                "あなたは親切なプロの料理人です。メイン食材「%s」を使い、さらに可能であれば冷蔵庫にある他の食材「%s」も有効活用した、" +
-                        "家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。また、冷蔵庫にないもので追加で買う必要のあるものはレシピの最後に書いといて下さい。\n" +
-                        "（他の食材はすべてを使う必要はありません。相性の良いものを組み合わせてください）\n\n" +
+                "あなたは親切なプロの料理人です。食材「%s」と一般的な調味料を使い、" +
+                        "家庭で簡単に作れる美味しい料理のレシピを1つ提案してください。\n\n" +
                         "以下の構成で日本語で出力してください：\n" +
                         "1. 料理名\n" +
                         "2. 材料（分量）\n" +
-                        "3. 作り方の手順（ステップバイステップで分かりやすく）\n" +
-                        "4. 美味しく作るためのコツ \n" +
-                        "ただし、以下のルールを守ってください \n" +
-                        "・食べ物ではないモノが指定された際には、「食べ物以外は受け付けません」という旨の文章を返し、レシピは表示しない。 \n" +
-                        "・一般的に食べ物とされていない動物や植物（ライオンやカメ、虫など）が指定された際には、「一般的に食用とされていないものは受け付けません」という旨の文章を返し、レシピは表示しない。\n" +
-                        "・必ず日本語を使用する。",
-                mainFood.getFoodName(),
-                otherFoodsText);
+                        "3. 作り方の手順\n" +
+                        "4. 美味しく作るためのコツ",
+                mainFood.getFoodName());
 
-        // ★ .call() ではなく .stream() を使うことで、文字が生成されるたびに順次JavaScriptに送信されます
-        return chatModel.stream(prompt);
+        // 末尾に [DONE] フラグを付与して、安全にフロントに終了を伝える
+        return chatModel.stream(prompt)
+                .concatWith(Flux.just("\n[DONE]"));
     }
 
 }

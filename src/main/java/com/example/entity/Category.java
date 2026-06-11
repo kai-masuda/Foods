@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
@@ -32,7 +33,12 @@ public class Category {
     
     @Column(length =  255, nullable = false)
     @NotBlank(message = "カテゴリ名は必須です")
-    @Size(max = 255)
+    @Size(max = 20, message = "カテゴリ名は20文字以内で入力してください")
+    //【追加】日本語（ひらがな・カタカナ・漢字）と英字のみ許可（数字や記号はエラー）
+    @Pattern(
+            regexp = "^[a-zA-Zぁ-んァ-ヶー一-龠々]+$",
+            message = "カテゴリ名には文字のみ入力してください(数字や記号は使用できません)"
+            )
     private String categoryName;
     
  // @ManyToOneで複数の食材が1つのカテゴリに属する(多対1)
@@ -49,3 +55,4 @@ public class Category {
     private List<Food> foods;
 
 }
+
