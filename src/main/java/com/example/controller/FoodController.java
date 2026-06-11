@@ -299,6 +299,10 @@ public class FoodController {
             String username = principal.getName();
             User currentUser = userService.findByUsername(username);
             if (currentUser != null) {
+                
+                //修正部分
+                Sort defaultSort = Sort.by(Sort.Direction.ASC, "id");
+                
                 // ユーザーIDに紐づく食材リストをすべて取得
                 List<Food> allFoods = foodRepository.findByUserId(currentUser.getId(), org.springframework.data.domain.Sort.unsorted());
 
