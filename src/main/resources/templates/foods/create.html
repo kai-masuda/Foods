@@ -22,7 +22,7 @@
                             th:oninput="|checkFoodNameLength(this, ${maxFoodNameLength})|"
                             th:oninvalid="|checkFoodNameLength(this, ${maxFoodNameLength})|">
                         <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
-                        <div th:errors="*{foodName}" style="color: red;" class="small mt-1" ></div>
+                        <div th:errors="*{foodName}" style="color: red;" class="small mt-1"></div>
                     </div>
 
                     <!-- 数量 -->
@@ -40,29 +40,33 @@
                     <!-- 【修正】カテゴリ名の入力（datalistを紐付け） -->
                     <div class="mb-3">
                         <label for="categoryName" class="form-label">カテゴリ名</label>
-                        <!-- list属性で下のdatalistを指定します -->
-                        <input type="text" id="categoryName" name="categoryName" th:value="${categoryName}"
-                            class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力" required>
+                        <!-- エラーで戻ってきた時は currentCategoryName を表示、それ以外は既存の値を表示 -->
+                        <input type="text" id="categoryName" name="categoryName"
+                            th:value="${currentCategoryName != null ? currentCategoryName : (food.category != null ? food.category.categoryName : '')}"
+                            class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力"
+                            required>
                         <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
-                        <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;" class="small mt-1" ></div>
-                        
+                        <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;"
+                            class="small mt-1"></div>
+
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
                             <!-- th:value の中身を |カテゴリ名（単位）| の形式に変更し、JavaScript用に個別データを持たせます -->
-                            <option th:each="c : ${allCategories}" 
-                                    th:value="|${c.categoryName}（${c.unit.unitName}）|" 
-                                    th:data-category="${c.categoryName}"
-                                    th:data-unit="${c.unit.unitName}"></option>
+                            <option th:each="c : ${allCategories}" th:value="|${c.categoryName}（${c.unit.unitName}）|"
+                                th:data-category="${c.categoryName}" th:data-unit="${c.unit.unitName}"></option>
                         </datalist>
                     </div>
 
                     <!-- 【修正】単位の入力（常に表示） -->
                     <div class="mb-3" id="unitInputArea">
                         <label for="unit" class="form-label">単位</label>
-                        <input type="text" id="unit" name="unit" th:value="${unit}" class="form-control"
-                            placeholder="例：g、パック">
+                        <!-- エラーで戻ってきた時は currentUnit を表示、それ以外は既存の値を表示 -->
+                        <input type="text" id="unit" name="unit"
+                            th:value="${currentUnit != null ? currentUnit : (food.category != null && food.category.unit != null ? food.category.unit.unitName : '')}"
+                            class="form-control" placeholder="例：g、パック">
+
                         <!--【追加】エラーメッセージを入力欄の下に赤文字で表示-->
-                        <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1" ></div>
+                        <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1"></div>
                     </div>
 
                     <div class="d-flex gap-2">
@@ -73,7 +77,7 @@
             </div>
         </div>
     </div>
-    
+
     <script>
         function checkFoodNameLength(input, maxLength) {
             if (input.validity.valueMissing) {
@@ -90,7 +94,7 @@
         // --- 【修正】Datalist選択時のカテゴリ名・単位の自動分解処理 ---
         document.getElementById('categoryName').addEventListener('input', function () {
             const inputValue = this.value.trim(); // 例: "野菜（本）" が入る
-            
+
             // datalist内の th:value と一致するオプションを探す
             const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
             const unitInput = document.getElementById('unit');
@@ -99,10 +103,10 @@
                 // 既存の「カテゴリ名（単位）」が選択された場合
                 const realCategoryName = option.getAttribute('data-category'); // "野菜" を取得
                 const existingUnit = option.getAttribute('data-unit');         // "本" を取得
-                
+
                 // 1. カテゴリ入力欄の表示をカッコなしの「野菜」に上書き
                 this.value = realCategoryName;
-                
+
                 // 2. 単位入力欄に既存の単位を自動セット
                 unitInput.value = existingUnit;
                 unitInput.placeholder = "例：g、パック（既存の単位を入力しました）";
@@ -112,7 +116,7 @@
                 unitInput.placeholder = "例：g、パック";
             }
         });
-        
+
         document.addEventListener("DOMContentLoaded", () => {
             // 1. datalist要素を取得
             const datalist = document.getElementById("categoryOptions");
@@ -130,5 +134,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>
