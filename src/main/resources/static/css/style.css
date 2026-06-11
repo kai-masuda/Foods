@@ -47,7 +47,7 @@ tr:hover { background-color: #f1f1f1; }
 .btn-warning { background-color: #ffc107; color: black; }
 .btn-danger { background-color: #dc3545; color: white; }
 .btn-secondary { background-color: #6c757d; color: white; }
-
+.btn-info {background-color:seagreen; color:white; }
 /* フォームと入力欄 */
 .form-control, .form-select {
     width: 100%;
