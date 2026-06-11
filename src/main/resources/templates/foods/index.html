@@ -14,7 +14,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1 class="h2">🥩食材一覧</h1>
 
-            <!--【修正】ユーザー名を表示--> 
+            <!--【修正】ユーザー名を表示-->
             <div class="d-flex align-items-center gap-2">
                 <span class="text-muted small">
                     👤 <strong th:text="${loginUser}">ユーザー名</strong> さん、こんにちは
@@ -28,57 +28,78 @@
         </div>
 
         <!-- 検索フォーム -->
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <form th:action="@{/foods}" method="get" class="row g-3 align-items-center">
+        <div class="row mb-4 g-3">
 
-                    <div class="col-md-4">
-                        <div class="input-group">
-                            <span class="input-group-text">食材名</span>
-                            <input type="text" name="keyword" th:value="${currentKeyword}" class="form-control"
-                                placeholder="キーワードを入力">
-                        </div>
+            <!-- 1. 食材名 検索フォーム -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <form th:action="@{/foods}" method="get" class="row g-2 align-items-center">
+                            <!-- コントローラー側でメソッドを区別するための隠しパラメータ（必要に応じて使用） -->
+                            <!-- <input type="hidden" name="searchType" value="keyword"> -->
+
+                            <div class="col-12 mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">食材名</span>
+                                    <input type="text" name="keyword" th:value="${currentKeyword}" class="form-control"
+                                        placeholder="キーワードを入力">
+                                </div>
+                            </div>
+
+                            <div class="col-4 d-flex gap-1">
+                                <button type="submit" class="btn btn-success btn-sm w-100">名前検索</button>
+                                <a th:href="@{/foods}" class="btn btn-secondary btn-sm">クリア</a>
+                            </div>
+                        </form>
                     </div>
-
-                    <div class="col-md-3">
-                        <div class="input-group">
-                            <span class="input-group-text">カテゴリ</span>
-                            <select name="categoryNames" class="form-select">
-                                <option value="">すべて</option>
-                                
-                                <option th:each="name : ${categoryNames}" th:value="${name}"
-                                    th:text="${name}"
-                                    th:selected="${name == currentCategoryName}">野菜</option>
-                            </select>
-                        </div>
-                    </div>
-                   
-
-                    <div class="col-md-2">
-                        <select name="sort" class="form-select">
-                            <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限</option>
-                            <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
-                            <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
-                            <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
-                        </select>
-                    </div>
-                   
-
-                    <div class="col-md-1">
-                        <select name="direction" class="form-select">
-                            <option value="asc" th:selected="${currentDirection == 'asc'}">昇順</option>
-                            <option value="desc" th:selected="${currentDirection == 'desc'}">降順</option>
-                        </select>
-                    </div>
-                    
-
-                    <div class="col-md-2 d-flex gap-2">
-                        <button type="submit" class="btn btn-success w-100">検索</button>
-                        <a th:href="@{/foods}" class="btn btn-secondary">クリア</a>
-                    </div>
-
-                </form>
+                </div>
             </div>
+
+            <!-- 2. カテゴリ 検索フォーム -->
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <form th:action="@{/foods}" method="get" class="row g-2 align-items-center">
+                            <!-- コントローラー側でメソッドを区別するための隠しパラメータ（必要に応じて使用） -->
+                            <!-- <input type="hidden" name="searchType" value="category"> -->
+
+                            <div class="col-12 mb-2">
+                                <div class="input-group">
+                                    <span class="input-group-text">カテゴリ</span>
+                                    <select name="categoryNames" class="form-select">
+                                        <option value="">すべて</option>
+                                        <option th:each="name : ${categoryNames}" th:value="${name}" th:text="${name}"
+                                            th:selected="${name == currentCategoryName}">野菜</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="col-5">
+                                <select name="sort" class="form-select form-select-sm">
+                                    <option value="tasteLimit" th:selected="${currentSort == 'tasteLimit'}">賞味・消費期限
+                                    </option>
+                                    <option value="foodName" th:selected="${currentSort == 'foodName'}">食材名</option>
+                                    <option value="amount" th:selected="${currentSort == 'amount'}">量</option>
+                                    <option value="id" th:selected="${currentSort == 'id'}">登録順(ID)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-3">
+                                <select name="direction" class="form-select form-select-sm">
+                                    <option value="asc" th:selected="${currentDirection == 'asc'}">昇順</option>
+                                    <option value="desc" th:selected="${currentDirection == 'desc'}">降順</option>
+                                </select>
+                            </div>
+
+                            <div class="col-4 d-flex gap-1">
+                                <button type="submit" class="btn btn-primary btn-sm w-100">カテゴリ検索</button>
+                                <a th:href="@{/foods}" class="btn btn-secondary btn-sm">クリア</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
         </div>
         <br>
 
@@ -90,9 +111,9 @@
                     🍳選択した食材でレシピ作成
                 </button>
             </div>
-        
-            
-                
+
+
+
             <!-- 食材一覧 -->
             <div class="card shadow-sm">
                 <div class="card-body">
@@ -114,38 +135,37 @@
                                 <td>
                                     <input type="checkbox" name="foodIds" th:value="${food.id}" />
                                 </td>
-                                  
+
                                 <td th:text="${foodStat.count}">1</td>
                                 <td th:text="${food.foodName}">トマト</td>
                                 <td th:text="${food.amount}">3</td>
                                 <td th:text="${food.category != null ? food.category.unit.unitName : ''}">個</td>
-    
+
                                 <td th:text="${food.tasteLimit}"
                                     th:classappend="${food.isExpired()} ? 'text-expired' : (${food.isUrgent()} ? 'text-urgent' : '')">
                                     2026-06-05
                                 </td>
-    
+
                                 <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
                                 <td>
                                     <div class="d-flex gap-2">
-                                        
+
                                         <a th:href="@{/foods/{id}/edit(id=${food.id})}"
                                             class="btn btn-sm btn-warning">編集</a>
-    
+
                                         <!-- 数量を指定して消費（削除）するフォーム -->
                                         <div class="d-flex gap-1 align-items-center">
-                                            <input type="number" th:id="'reduceAmount-' + ${food.id}" name="reduceAmount" class="form-control form-control-sm"
-                                                style="width: 70px;" min="0.1" th:max="${food.amount}" value="1" step="any"
-                                                required>
-                                            
-                                            <button type="button" 
-                                                    th:onclick="'submitDelete(' + ${food.id} + ')'"
-                                                    class="btn btn-sm btn-danger"
-                                                    style="white-space: nowrap;">
+                                            <input type="number" th:id="'reduceAmount-' + ${food.id}"
+                                                name="reduceAmount" class="form-control form-control-sm"
+                                                style="width: 70px;" min="0.1" th:max="${food.amount}" value="1"
+                                                step="any" required>
+
+                                            <button type="button" th:onclick="'submitDelete(' + ${food.id} + ')'"
+                                                class="btn btn-sm btn-danger" style="white-space: nowrap;">
                                                 消費
                                             </button>
                                         </div>
-                                                                           
+
                                     </div>
                                 </td>
                             </tr>
@@ -163,13 +183,13 @@
             // 1. 該当行の入力された数量を取得
             const amountInput = document.getElementById('reduceAmount-' + foodId);
             const reduceAmount = amountInput.value;
-            
+
             // 2. 裏方フォームを取得
             const deleteForm = document.getElementById('deleteForm');
-            
+
             // 3. 送信先URLを正しくセット
             deleteForm.action = '/foods/' + foodId + '/delete?reduceAmount=' + reduceAmount;
-            
+
             // 4. 送信！ (これでThymeleafが生成したCSRFトークンが一緒に送られます)
             deleteForm.submit();
         }
