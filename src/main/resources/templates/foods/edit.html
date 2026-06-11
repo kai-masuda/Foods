@@ -21,6 +21,7 @@
                             th:pattern="${'.{1,' + maxFoodNameLength + '}'}" required
                             th:oninput="|checkFoodNameLength(this, ${maxFoodNameLength})|"
                             th:oninvalid="|checkFoodNameLength(this, ${maxFoodNameLength})|">
+                        <div th:errors="*{foodName}" style="color: red;" class="small mt-1"></div>
                     </div>
 
                     <!-- 数量 -->
@@ -38,35 +39,32 @@
                     <!-- 【修正】カテゴリ名の入力（datalistを紐付け） -->
                     <div class="mb-3">
                         <label for="categoryName" class="form-label">カテゴリ名</label>
-                        <!-- パターンA：カテゴリがすでに登録されている場合（名前を表示） -->
-                        <input th:if="${food.category != null}" type="text" id="categoryName" name="categoryName"
-                            th:value="${food.category.categoryName}" class="form-control" list="categoryOptions"
-                            autocomplete="off" placeholder="選択または新規入力" required>
-                            
+                        <!-- エラーで戻ってきた時は currentCategoryName を表示、それ以外は既存の値を表示 -->
+                        <input type="text" id="categoryName" name="categoryName"
+                            th:value="${currentCategoryName != null ? currentCategoryName : (food.category != null ? food.category.categoryName : '')}"
+                            class="form-control" list="categoryOptions" autocomplete="off" placeholder="選択または新規入力"
+                            required>
 
-                        <!-- パターンB：カテゴリが未登録（null）の場合（空欄を表示） -->
-                        <input th:unless="${food.category != null}" type="text" id="categoryName" name="categoryName"
-                            value="" class="form-control" list="categoryOptions" autocomplete="off"
-                            placeholder="選択または新規入力" required>
-                            <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;" class="small mt-1" ></div>
+                        <div th:if="${categoryNameError}" th:text="${categoryNameError}" style="color: red;"
+                            class="small mt-1"></div>
 
                         <!-- 既存のカテゴリ一覧を候補として出力 -->
                         <datalist id="categoryOptions">
-                            <option th:each="c : ${allCategories}" 
-                                    th:value="${c.categoryName + '（' + c.unit.unitName + '）'}"
-                                    th:data-category="${c.categoryName}" 
-                                    th:data-unit="${c.unit.unitName}"></option>
+                            <option th:each="c : ${allCategories}"
+                                th:value="${c.categoryName + '（' + c.unit.unitName + '）'}"
+                                th:data-category="${c.categoryName}" th:data-unit="${c.unit.unitName}"></option>
                         </datalist>
                     </div>
 
                     <!-- 【修正】単位の入力（現在の単位を初期値としてセット、requiredは外す） -->
                     <div class="mb-4" id="unitInputArea">
                         <label for="unit" class="form-label">単位</label>
+                        <!-- エラーで戻ってきた時は currentUnit を表示、それ以外は既存の値を表示 -->
                         <input type="text" id="unit" name="unit"
-                            th:value="${food.category != null &&food.category.unit != null ? food.category.unit.unitName : ''}" class="form-control"
-                            placeholder="例：g、パック（空欄なら既存の単位）">
-                            <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1" ></div>
-                            
+                            th:value="${currentUnit != null ? currentUnit : (food.category != null && food.category.unit != null ? food.category.unit.unitName : '')}"
+                            class="form-control" placeholder="例：g、パック（空欄なら既存の単位）">
+                        <div th:if="${unitError}" th:text="${unitError}" style="color: red;" class="small mt-1"></div>
+
                     </div>
 
                     <div class="d-flex gap-2">
@@ -79,56 +77,56 @@
     </div>
 
     <script>
-            function checkFoodNameLength(input, maxLength) {
-                if (input.validity.valueMissing) {
-                    input.setCustomValidity("このフィールドに入力してください。");
-                }
-                else if (input.validity.patternMismatch) {
-                    input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
-                }
-                else {
-                    input.setCustomValidity("");
-                }
+        function checkFoodNameLength(input, maxLength) {
+            if (input.validity.valueMissing) {
+                input.setCustomValidity("このフィールドに入力してください。");
             }
+            else if (input.validity.patternMismatch) {
+                input.setCustomValidity(`食材名は${maxLength}文字以内で入力してください。`);
+            }
+            else {
+                input.setCustomValidity("");
+            }
+        }
 
-            // ★重複していた処理を1つに綺麗にまとめました
-            document.getElementById('categoryName').addEventListener('input', function () {
-                const inputValue = this.value.trim(); // 例: "きのこ（個）" または "きのこ"
-                const unitInput = document.getElementById('unit');
+        // ★重複していた処理を1つに綺麗にまとめました
+        document.getElementById('categoryName').addEventListener('input', function () {
+            const inputValue = this.value.trim(); // 例: "きのこ（個）" または "きのこ"
+            const unitInput = document.getElementById('unit');
 
-                // datalist内のオプションを検索
-                const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
+            // datalist内のオプションを検索
+            const option = document.querySelector(`#categoryOptions option[value="${inputValue}"]`);
 
-                if (option) {
-                    // 既存の「カテゴリ名（単位）」が選択された場合の処理
-                    const realCategoryName = option.getAttribute('data-category'); // "きのこ"
-                    const existingUnit = option.getAttribute('data-unit');         // "個"
+            if (option) {
+                // 既存の「カテゴリ名（単位）」が選択された場合の処理
+                const realCategoryName = option.getAttribute('data-category'); // "きのこ"
+                const existingUnit = option.getAttribute('data-unit');         // "個"
 
-                    // 1. カテゴリ入力欄の表示をカッコなしの綺麗な名前に上書き
-                    this.value = realCategoryName;
+                // 1. カテゴリ入力欄の表示をカッコなしの綺麗な名前に上書き
+                this.value = realCategoryName;
 
-                    // 2. 単位入力欄に既存の単位を自動セット
-                    unitInput.value = existingUnit;
-                    unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
-                } else {
-                    // 手動でタイピング中、または一致するものがない場合
-                    // 単位入力欄の値はそのままにし、プレースホルダーだけ標準に戻す
-                    unitInput.placeholder = "例：g、パック";
-                }
-            });
+                // 2. 単位入力欄に既存の単位を自動セット
+                unitInput.value = existingUnit;
+                unitInput.placeholder = `既存の単位: ${existingUnit} （変更する場合のみ入力）`;
+            } else {
+                // 手動でタイピング中、または一致するものがない場合
+                // 単位入力欄の値はそのままにし、プレースホルダーだけ標準に戻す
+                unitInput.placeholder = "例：g、パック";
+            }
+        });
 
-            // 画面を開いたときに五十音順に並び替える処理
-            document.addEventListener("DOMContentLoaded", () => {
-                const datalist = document.getElementById("categoryOptions");
-                if (!datalist) return;
+        // 画面を開いたときに五十音順に並び替える処理
+        document.addEventListener("DOMContentLoaded", () => {
+            const datalist = document.getElementById("categoryOptions");
+            if (!datalist) return;
 
-                const options = Array.from(datalist.options);
-                options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
+            const options = Array.from(datalist.options);
+            options.sort((a, b) => a.value.localeCompare(b.value, 'ja'));
 
-                datalist.innerHTML = "";
-                options.forEach(option => datalist.appendChild(option));
-            });
-        </script>
+            datalist.innerHTML = "";
+            options.forEach(option => datalist.appendChild(option));
+        });
+    </script>
 </body>
 
 </html>
