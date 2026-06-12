@@ -23,9 +23,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.example.entity.Category;
 import com.example.entity.Food;
+import com.example.entity.ShoppingMemo;
 import com.example.entity.Unit;
 import com.example.entity.User; // ★Userエンティティをインポート
 import com.example.repository.FoodRepository;
+import com.example.repository.ShoppingMemoRepository;
 import com.example.service.UnitService;
 import com.example.service.UserService; // ★UserServiceをインポート
 
@@ -57,6 +59,10 @@ public class FoodController {
     //【追加】バリデーターの準備
     @Autowired
     private jakarta.validation.Validator beanValidator;
+    
+    @Autowired
+    private ShoppingMemoRepository shoppingMemoRepository;
+
 
     // 一覧表示 (URL: GET /foods)
     @GetMapping
@@ -79,7 +85,7 @@ public class FoodController {
             return "redirect:/login?error";
         }
 
-        Long userId = currentUser.getId(); // これでNullPointerExceptionを絶対に防ぎます
+        Long userId = currentUser.getId();
 
         Sort sortOrder = direction.equalsIgnoreCase("desc") ? Sort.by(sort).descending() : Sort.by(sort).ascending();
 
@@ -99,8 +105,10 @@ public class FoodController {
         // 2. ログインユーザーのIDを検索条件に渡して、自分の食材だけを取得する
         // (※FoodService側に searchFoodsByUserId メソッドを追加する必要があります)
         List<Food> foods = foodService.searchFoodsByUserId(userId, keyword, categoryNames, sortOrder);
-
         model.addAttribute("foods", foods);
+        
+        List<ShoppingMemo> shoppingMemos = shoppingMemoRepository.findByUserIdOrderByCreatedAtDesc(userId);
+        model.addAttribute("shoppingMemos", shoppingMemos);
 
         model.addAttribute("currentKeyword", keyword);
         model.addAttribute("currentCategoryId", categoryId);
@@ -112,6 +120,21 @@ public class FoodController {
         model.addAttribute("loginUser", currentUser.getUsername());
 
         return "foods/index";
+    }
+    
+    //買い物メモ
+    @PostMapping("/shopping-memo/add")
+    public String addToShoppingMemo(@RequestParam("memoText") String memoText, Principal principal) {
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+
+        if (currentUser != null && memoText != null && !memoText.trim().isEmpty()) {
+            ShoppingMemo memo = new ShoppingMemo();
+            memo.setMemoText(memoText.trim());
+            memo.setUser(currentUser);
+            shoppingMemoRepository.save(memo);
+        }
+        return "redirect:/foods"; // 登録完了後、食材一覧画面に戻る
     }
 
     // 登録画面表示 (URL: GET /foods/new)

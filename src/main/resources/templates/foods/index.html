@@ -104,80 +104,95 @@
         <br>
 
         <form id="deleteForm" th:action="@{/foods}" method="post" style="display: none;"></form>
-        <form th:action="@{/foods/recipe/generate}" method="get">
-            <div class="d-flex gap-2 mb-3">
-                <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
-                <button type="submit" class="btn btn-info text-white">
-                    🍳選択した食材でレシピ作成
-                </button>
+
+        <!-- ================== 🌟 ここから2カラムレイアウト開始 ================== -->
+        <div class="row">
+
+            <!-- 📄 左側：メインカラム（幅 9/12）食材一覧とレシピ検索 -->
+            <div class="col-lg-9 mb-4">
+                <form th:action="@{/foods/recipe/generate}" method="get">
+                    <div class="d-flex gap-2 mb-3">
+                        <a th:href="@{/foods/new}" class="btn btn-primary">新規登録</a>
+                        <button type="submit" class="btn btn-info text-white">
+                            🍳選択した食材でレシピ作成
+                        </button>
+                    </div>
+
+                    <!-- 食材一覧カード -->
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <table class="table table-striped table-hover align-middle mb-0">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>レシピ検索</th>
+                                        <th>No.</th>
+                                        <th>食材名</th>
+                                        <th>量</th>
+                                        <th>単位</th>
+                                        <th>賞味・消費期限</th>
+                                        <th>カテゴリ</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="food : ${foods}">
+                                        <td>
+                                            <input type="checkbox" name="foodIds" th:value="${food.id}" />
+                                        </td>
+
+                                        <td th:text="${foodStat.count}">1</td>
+                                        <td th:text="${food.foodName}">トマト</td>
+                                        <td th:text="${food.amount}">3</td>
+                                        <td th:text="${food.category != null ? food.category.unit.unitName : ''}">個</td>
+
+                                        <td th:text="${food.tasteLimit}"
+                                            th:classappend="${food.isExpired()} ? 'text-expired' : (${food.isUrgent()} ? 'text-urgent' : '')">
+                                            2026-06-05
+                                        </td>
+
+                                        <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <a th:href="@{/foods/{id}/edit(id=${food.id})}"
+                                                    class="btn btn-sm btn-warning">編集</a>
+
+                                                <!-- 数量を指定して消費（削除）するフォーム -->
+                                                <div class="d-flex gap-1 align-items-center">
+                                                    <input type="number" th:id="'reduceAmount-' + ${food.id}"
+                                                        name="reduceAmount" class="form-control form-control-sm"
+                                                        style="width: 70px;" min="0.1" th:max="${food.amount}" value="1"
+                                                        step="any" required>
+
+                                                    <button type="button"
+                                                        th:onclick="'submitDelete(' + ${food.id} + ')'"
+                                                        class="btn btn-sm btn-danger" style="white-space: nowrap;">
+                                                        消費
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- 食材が空のときの判定（元のコードを維持） -->
+                                    <tr th:if="${#lists.isEmpty(foods)}">
+                                        <td colspan="8" class="text-center text-muted py-4">食材が登録されていません。</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </form>
+            </div> <!-- 左側メインカラム終了 -->
+
+            <!-- 📝 右側：サイドバーカラム（幅 3/12）買い物メモの埋め込み -->
+            <div class="col-lg-3">
+                <!-- 💡 th:replace を使い、別ファイル（shopping_sidebar.html）に分けたメモ機能をここに埋め込みます -->
+                <div th:replace="~{foods/shoppingmemo :: shoppingSidebar}"></div>
             </div>
 
+        </div> <!-- row 終了（新しく追加した全体を囲うための閉じタグ） -->
+    </div> <!-- container 終了（元々コードの一番下にあった、画面全体の閉じタグ） -->
 
-
-            <!-- 食材一覧 -->
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <table class="table table-striped table-hover align-middle mb-0">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>レシピ検索</th>
-                                <th>No.</th>
-                                <th>食材名</th>
-                                <th>量</th>
-                                <th>単位</th>
-                                <th>賞味・消費期限</th>
-                                <th>カテゴリ</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="food : ${foods}">
-                                <td>
-                                    <input type="checkbox" name="foodIds" th:value="${food.id}" />
-                                </td>
-
-                                <td th:text="${foodStat.count}">1</td>
-                                <td th:text="${food.foodName}">トマト</td>
-                                <td th:text="${food.amount}">3</td>
-                                <td th:text="${food.category != null ? food.category.unit.unitName : ''}">個</td>
-
-                                <td th:text="${food.tasteLimit}"
-                                    th:classappend="${food.isExpired()} ? 'text-expired' : (${food.isUrgent()} ? 'text-urgent' : '')">
-                                    2026-06-05
-                                </td>
-
-                                <td th:text="${food.category != null ? food.category.categoryName : '未設定'}">野菜</td>
-                                <td>
-                                    <div class="d-flex gap-2">
-
-                                        <a th:href="@{/foods/{id}/edit(id=${food.id})}"
-                                            class="btn btn-sm btn-warning">編集</a>
-
-                                        <!-- 数量を指定して消費（削除）するフォーム -->
-                                        <div class="d-flex gap-1 align-items-center">
-                                            <input type="number" th:id="'reduceAmount-' + ${food.id}"
-                                                name="reduceAmount" class="form-control form-control-sm"
-                                                style="width: 70px;" min="0.1" th:max="${food.amount}" value="1"
-                                                step="any" required>
-
-                                            <button type="button" th:onclick="'submitDelete(' + ${food.id} + ')'"
-                                                class="btn btn-sm btn-danger" style="white-space: nowrap;">
-                                                消費
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr th:if="${#lists.isEmpty(foods)}">
-                                <td colspan="7" class="text-center text-muted py-4">食材が登録されていません。</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </form>
-    </div>
     <script th:inline="javascript">
         function submitDelete(foodId) {
             // 1. 該当行の入力された数量を取得
