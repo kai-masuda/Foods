@@ -184,8 +184,36 @@ public class FoodController {
         User currentUser = userService.findByUsername(username);
         food.setUser(currentUser);
 
+        //【追加】すでに存在する食材名、期限、カテゴリ名、単位のデータは量を合算する
+        // カテゴリと単位を確定させる
         handleCategory(food, categoryName, unit);
-        foodService.saveFood(food);
+        
+        // ログインユーザの食材から、名前が一致するものを検索
+        List<Food> existingFoods = foodService.searchFoodsByUserId(currentUser.getId(), food.getFoodName(), null, org.springframework.data.domain.Sort.by("id"));
+        
+        Food duplicateFood = null;
+        for (Food existing : existingFoods) {
+            // 食材名、カテゴリID、賞味期限がすべて一致するかチェック
+            if (existing.getFoodName().equals(food.getFoodName()) &&
+                existing.getCategory().getId().equals(food.getCategory().getId()) &&
+                existing.getTasteLimit().equals(food.getTasteLimit())) {
+                
+                duplicateFood = existing;
+                break;
+            }
+        }
+
+        if (duplicateFood != null) {
+            // 重複があれば、既存のデータに数量を合算
+            double newAmount = duplicateFood.getAmount() + food.getAmount();
+            newAmount = Math.round(newAmount * 100.0) / 100.0; // 小数点計算のズレ防止
+            
+            duplicateFood.setAmount(newAmount);
+            foodService.saveFood(duplicateFood);
+        } else {
+            // 重複がなければ、通常通り新規保存
+            foodService.saveFood(food);
+        }
         return "redirect:/foods";
     }
 
@@ -291,7 +319,40 @@ public class FoodController {
         existingFood.setUser(currentUser);
 
         handleCategory(existingFood, categoryName, unit);
-        foodService.saveFood(existingFood);
+        
+        //【追加】すでに存在する食材名、期限、カテゴリ名、単位のデータは量を合算する
+        List<Food> sameNameFoods = foodService.searchFoodsByUserId(currentUser.getId(), food.getFoodName(), null, org.springframework.data.domain.Sort.by("id"));
+        
+        Food duplicateFood = null;
+        for (Food otherFood : sameNameFoods) {
+            // 自分自身のID（既存のデータ）以外で、名前・カテゴリID・賞味期限がすべて一致する「別データ」を探す
+            if (!otherFood.getId().equals(existingFood.getId()) &&
+                otherFood.getFoodName().equals(existingFood.getFoodName()) &&
+                otherFood.getCategory().getId().equals(existingFood.getCategory().getId()) &&
+                otherFood.getTasteLimit().equals(existingFood.getTasteLimit())) {
+                
+                duplicateFood = otherFood;
+                break;
+            }
+        }
+
+        if (duplicateFood != null) {
+            // 別のデータと被った場合
+            // 別の既存データに、今回の入力された数量（food.getAmount()）を足し算する
+            double newAmount = duplicateFood.getAmount() + food.getAmount();
+            newAmount = Math.round(newAmount * 100.0) / 100.0; // 小数点ズレ防止
+            
+            duplicateFood.setAmount(newAmount);
+            foodService.saveFood(duplicateFood); // 被った方のデータを更新保存
+            
+            // 編集元のデータ（古い方）は不要になった（合算された）ので、データベースから削除する
+            foodService.deleteFood(existingFood.getId());
+        } else {
+            // ただの編集の場合
+            // 通常通り、画面から入力された数量をそのままセットして保存
+            existingFood.setAmount(food.getAmount());
+            foodService.saveFood(existingFood);
+        }
         return "redirect:/foods";
     }
 
