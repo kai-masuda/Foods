@@ -440,7 +440,14 @@ public class FoodController {
     
     @GetMapping(value = "/recipe/stream", produces = "text/event-stream;charset=UTF-8")
     @ResponseBody
-    public Flux<String> streamRecipe(@RequestParam("foodIds") List<Long> foodIds) {
+    public Flux<String> streamRecipe(@RequestParam("foodIds") List<Long> foodIds, Principal principal) {
+        
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+        
+        List<Food> allFoods = foodService.searchFoodsByUserId(currentUser.getId(), "", "", org.springframework.data.domain.Sort.by("id"));
+        String allFoodsText = allFoods.stream().map(Food::getFoodName).collect(Collectors.joining("、"));
+       
         List<Food> selectedFoods = foodRepository.findAllById(foodIds);
         String mainFoodsText = selectedFoods.stream().map(Food::getFoodName).collect(Collectors.joining("、"));
         
@@ -450,6 +457,9 @@ public class FoodController {
 
             "# 対象の食材\n" +
             "「%s」\n\n" +
+            "冷蔵庫にあるその他の食材\n" +
+            "「%s」\n" +
+            "レシピに必要な食材を考える際、できるだけこれらの食材を優先して使用してください。\n" +
 
             "#  最優先の絶対拒否ルール（最重要）\n" +
             "1. 対象の食材が【食べ物ではないモノ（例：机、車、石、洗剤など）】の場合、以下のメッセージだけを返し、絶対にレシピは表示しないでください。\n" +
@@ -458,17 +468,17 @@ public class FoodController {
             "   「一般的に食用とされていないものは受け付けません。」\n\n" +
 
             "#  レシピ生成のルール（上記拒否ルールに該当しない場合のみ実行）\n" +
-            "・必ず実在する、日本で一般的な定番の家庭料理を3つ提案してください（奇抜な創作料理は厳禁）。\n\n" +
+            "・必ず実在する、日本で一般的な定番の家庭料理を1つ提案してください（奇抜な創作料理は厳禁）。\n\n" +
             "【超重要：食材の組み合わせルール】\n" +
             "・メインの食材と組み合わせる他の具材や調味料は、**日本の一般的なスーパーで安価に買える、その料理の『超定番の食材』だけ**に限定してください。\n" +
-            "・例えば、野菜炒めなら「キャベツ、もやし、人参、豚肉、玉ねぎ」などの定番のみを使用し、**「きゅうり」「レタス」「トマト」といった、日本の家庭においてその料理に加熱して入れないような意外性のある食材は絶対に組み合わせないでください。**\n"
-            +
+            "・例えば、野菜炒めなら「キャベツ、もやし、人参、豚肉、玉ねぎ」などの定番のみを使用し、**「きゅうり」「レタス」「トマト」といった、日本の家庭においてその料理に加熱して入れないような意外性のある食材は絶対に組み合わせないでください。**\n" +
             "・「冷蔵庫に余りがちな定番の組み合わせ」を強く意識し、突拍子もないアレンジは一切行わないでください。\n\n" +
             "【初心者への配慮・表現】\n" +
             "・料理初心者に向けて、専門用語を使わず、懇切丁寧にステップバイステップで手順を説明してください。\n" +
             "・食材の切り方は、日本で広く使われている一般的な表現（例：いちょう切り、みじん切り、乱切りなど）を使用してください。\n" +
             "・実際にこの通りに作れば、本当に美味しく作れる正確な分量と手順にしてください。\n" +
             "・解説文やフレーズを含め、出力はすべて自然な日本語のみを使用してください。\n\n" +
+            "・レシピ生成時に、「レシピに必要な食材」が「冷蔵庫にあるその他の食材」の中にあった場合、その食材の横に◎を書いてください" + 
 
             "# 出力フォーマット\n" +
             "以下の構成を3つの料理それぞれで繰り返して出力してください。\n" +
@@ -477,7 +487,7 @@ public class FoodController {
             "1. 材料（分量）\n" +
             "2. 作り方の手順\n" +
             "3. 美味しく作るためのコツ",
-            mainFoodsText);
+            mainFoodsText, allFoodsText);
         
         // 末尾に [DONE] フラグを付与して、安全にフロントに終了を伝える
         return chatModel.stream(prompt)
