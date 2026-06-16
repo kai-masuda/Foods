@@ -136,6 +136,23 @@ public class FoodController {
         }
         return "redirect:/foods"; // 登録完了後、食材一覧画面に戻る
     }
+ // FoodController.java の末尾（クラスの閉じタグ「}」の直前など）に追加してください
+
+    @PostMapping("/shopping-memo/{id}/delete")
+    public String deleteShoppingMemo(@PathVariable("id") Long id, Principal principal) {
+        String username = principal.getName();
+        User currentUser = userService.findByUsername(username);
+
+        if (currentUser != null) {
+            // 安全のため、削除しようとしているメモが本当にログインユーザーのものか確認して削除
+            shoppingMemoRepository.findById(id).ifPresent(memo -> {
+                if (memo.getUser().getId().equals(currentUser.getId())) {
+                    shoppingMemoRepository.delete(memo);
+                }
+            });
+        }
+        return "redirect:/foods"; // 削除完了後、一覧画面にリダイレクトして再表示
+    }
 
     // 登録画面表示 (URL: GET /foods/new)
     @GetMapping("/new")
