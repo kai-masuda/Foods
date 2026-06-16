@@ -1,15 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://thymeleaf.org">
-<head><meta charset="UTF-8"></head>
-<body>
 
-    <!-- th:fragment で名前をつけて部品化します -->
+<head>
+    <meta charset="UTF-8">
+</head>
+
+<body>
     <div th:fragment="shoppingSidebar" class="card shadow-sm border-secondary position-sticky" style="top: 20px;">
         <div class="card-header bg-secondary text-white">
             <h5 class="card-title mb-0" style="font-size: 1.1rem;">📝 買い物メモ</h5>
         </div>
         <div class="card-body bg-white p-3">
-            
+
             <!-- メモ追加フォーム -->
             <form th:action="@{/foods/shopping-memo/add}" method="post" class="mb-3">
                 <div class="input-group input-group-sm">
@@ -17,14 +19,26 @@
                     <button type="submit" class="btn btn-primary">追加</button>
                 </div>
             </form>
-            
+
             <!-- メモ一覧のループ表示 -->
             <ul class="list-group list-group-flush small">
-                <li th:each="memo : ${shoppingMemos}" class="list-group-item p-2 border-bottom text-dark">
-                    <span th:text="${memo.memoText}">メモの内容</span>
+                <!-- 💡 d-flex を使って、テキストと削除ボタンを左右に綺麗に配置します -->
+                <li th:each="memo : ${shoppingMemos}"
+                    class="list-group-item p-2 border-bottom d-flex justify-content-between align-items-center text-dark">
+                    <span th:text="${'• ' + memo.memoText}">メモの内容</span>
+
+                    <!-- ❌ 削除用フォームボタン -->
+                    <form th:action="@{/foods/shopping-memo/{id}/delete(id=${memo.id})}" method="post"
+                        style="margin: 0;">
+                        <button type="submit" class="btn btn-sm text-danger p-0 border-0"
+                            style="font-size: 0.85rem; line-height: 1;"
+                            title="削除">
+                            ❌
+                        </button>
+                    </form>
                 </li>
             </ul>
-            
+
             <!-- メモが1つもない場合のメッセージ -->
             <div th:if="${#lists.isEmpty(shoppingMemos)}" class="text-center py-4 text-muted">
                 <p class="mb-0">メモは空っぽです</p>
@@ -33,4 +47,5 @@
     </div>
 
 </body>
+
 </html>
