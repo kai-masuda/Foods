@@ -16,9 +16,11 @@
 
             <!--【修正】ユーザー名を表示-->
             <div class="d-flex align-items-center gap-2">
-                <span class="text-muted small">
+                <div class="text-muted small">
                     👤 <strong th:text="${loginUser}">ユーザー名</strong> さん、こんにちは
-                </span>
+                </div>
+                <div>(今日の日付：<span id="today"></span>)</div>
+
                 <!-- ログアウトボタン -->
                 <form th:action="@{/logout}" method="post" style="display: inline;">
                     <button type="submit" class="btn btn-danger">ログアウト</button>
@@ -35,8 +37,6 @@
                 <div class="card shadow-sm h-100">
                     <div class="card-body">
                         <form th:action="@{/foods}" method="get" class="row g-2 align-items-center">
-                            <!-- コントローラー側でメソッドを区別するための隠しパラメータ（必要に応じて使用） -->
-                            <!-- <input type="hidden" name="searchType" value="keyword"> -->
 
                             <div class="col-12 mb-2">
                                 <div class="input-group">
@@ -179,6 +179,7 @@
                                     </tr>
                                 </tbody>
                             </table>
+                            <p>期限切れ:<span class="text-expired">■ </span> 3日以内:<span class="text-urgent">■</span></p>
                         </div>
                     </div>
                 </form>
@@ -208,6 +209,23 @@
             // 4. 送信！ (これでThymeleafが生成したCSRFトークンが一緒に送られます)
             deleteForm.submit();
         }
+        function displayToday() {
+            const now = new Date();
+
+            // 月や日が1桁の場合は0埋め
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+
+            // 表示形式を組み立て
+            const formattedDate = `${year}/${month}/${day}`;
+
+            // HTMLに反映
+            document.getElementById('today').textContent = formattedDate;
+        }
+
+        // ページ読み込み時に実行
+        window.onload = displayToday;
     </script>
 </body>
 
