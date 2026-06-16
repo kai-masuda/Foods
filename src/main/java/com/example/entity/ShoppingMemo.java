@@ -26,8 +26,7 @@ public class ShoppingMemo {
     private Long id;
 
     @Column(nullable = false, length = 255)
-    private String memoText; // メモの内容（「牛乳買う」など）
-
+    private String memoText; 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user; // どのユーザーのメモか

@@ -47,6 +47,7 @@ tr:hover { background-color: #f1f1f1; }
 .btn-warning { background-color: #ffc107; color: black; }
 .btn-danger { background-color: #dc3545; color: white; }
 .btn-secondary { background-color: #6c757d; color: white; }
+.btn-info {background-color:seagreen; color:white; }
 
 /* フォームと入力欄 */
 .form-control, .form-select {
@@ -64,6 +65,11 @@ tr:hover { background-color: #f1f1f1; }
 .gap-1 { gap: 5px; }
 .gap-2 { gap: 10px; }
 
+/* 検索ボタンとセレクトボックス間に行間 */
+.col-12 , .col-5, .col-3, .col-4 {
+    margin-bottom: 5px !important;
+}
+
 /* 期限切れ */
 .text-expired {
     color: #dc3545 !important;
@@ -79,3 +85,4 @@ tr:hover { background-color: #f1f1f1; }
 .error{
     color:red;
 }
+.col-md-6{margin-top: 12px;}

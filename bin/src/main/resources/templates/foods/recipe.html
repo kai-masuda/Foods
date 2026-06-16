@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <title>AIレシピ提案</title>
@@ -11,6 +11,7 @@
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">🍳 AIレシピ提案</h5>
+                <!-- 💡 選択された1つの食材名だけをバッジに表示 -->
                 <span class="badge bg-light text-dark" th:text="${food.foodName}">食材名</span>
             </div>
             
@@ -39,48 +40,56 @@
 
     <script th:inline="javascript">
         document.addEventListener("DOMContentLoaded", function() {
-            const foodId = /*[[${food.id}]]*/ 0;
+            // 💡 Java側から渡された、単一の食材IDを取得します
+            const foodId = /*[[${food.id}]]*/ null;
+            
             const recipeContent = document.getElementById("recipe-content");
             const loadingSection = document.getElementById("loading-section");
             const recipeSection = document.getElementById("recipe-section");
 
-            // ★ ストリーミングAPI（SSE）に接続
+            if (!foodId) {
+                console.error('Food ID is null or missing.');
+                return;
+            }
+
+            
             const eventSource = new EventSource(`/foods/${foodId}/recipe/generate`);
 
             // Javaから新しい文字（データ）が届くたびに発火するイベント
             eventSource.onmessage = function(event) {
-                // 最初の1文字目が届いた瞬間にローディングを隠して結果枠を出す
                 if (recipeSection.classList.contains("d-none")) {
                     loadingSection.classList.add("d-none");
                     recipeSection.classList.remove("d-none");
                 }
 
-                // 送られてきた文字を末尾にどんどん追加していく
-                // (改行コードやスペースがそのまま反映されるよう、必要に応じてパース処理が入る場合がありますが、Spring AIの標準的なプレーンテキストであればそのままで動くことが多いです)
                 if (event.data) {
-                    // Spring AIのストリームデータは稀に特殊な区切り文字が入る場合があるため、簡易置換や追加を行います
+                    // 💡 サーバーからの終了合図[DONE]を検知したら、即座に通信を閉じてループを防ぐ
+                    if (event.data.trim() === "[DONE]") {
+                        console.log("Stream finished completely.");
+                        eventSource.close();
+                        return;
+                    }
                     recipeContent.textContent += event.data;
                 }
             };
 
             // 生成がすべて正常に終了、またはエラーが起きた場合
             eventSource.onerror = function(event) {
-                // 通信が正常に終了しても onerror が呼ばれる仕様（readyStateがCLOSEDになる）のため、
-                // すでに文字が出力されていれば「完了」とみなして通信を閉じます
-                if (recipeContent.textContent.length > 0) {
-                    eventSource.close(); 
-                } else {
+                // 🛑 自動リトライ（無限ループ）を絶対に阻止するため、何よりも先にクローズ
+                eventSource.close(); 
+                
+                if (recipeContent.textContent.length === 0) {
                     console.error('Stream Error:', event);
                     loadingSection.innerHTML = `
                         <div class="text-danger py-4">
                             <h5>⚠️ レシピの生成に失敗しました</h5>
-                            <p class="small mb-0">Ollamaの起動状態を確認してください。</p>
+                            <p class="small mb-0">Ollamaの起動状態や、食材が正しく選択されているか確認してください。</p>
                         </div>
                     `;
-                    eventSource.close();
                 }
             };
         });
     </script>
 </body>
 </html>
+
