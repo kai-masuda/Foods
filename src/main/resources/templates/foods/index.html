@@ -169,6 +169,12 @@
                                                         class="btn btn-sm btn-danger" style="white-space: nowrap;">
                                                         消費
                                                     </button>
+
+                                                    <button type="button" th:onclick="'submitClear(' + ${food.id} + ')'"
+                                                        class="btn btn-sm btn-outline-danger"
+                                                        style="white-space: nowrap;">
+                                                        廃棄
+                                                    </button>
                                                 </div>
                                             </div>
                                         </td>
@@ -183,16 +189,15 @@
                         </div>
                     </div>
                 </form>
-            </div> <!-- 左側メインカラム終了 -->
+            </div>
 
-            <!-- 📝 右側：サイドバーカラム（幅 3/12）買い物メモの埋め込み -->
             <div class="col-lg-3">
                 <!-- 💡 th:replace を使い、別ファイル（shopping_sidebar.html）に分けたメモ機能をここに埋め込みます -->
                 <div th:replace="~{foods/shoppingmemo :: shoppingSidebar}"></div>
             </div>
 
-        </div> <!-- row 終了（新しく追加した全体を囲うための閉じタグ） -->
-    </div> <!-- container 終了（元々コードの一番下にあった、画面全体の閉じタグ） -->
+        </div>
+    </div> 
 
     <script th:inline="javascript">
         function submitDelete(foodId) {
@@ -209,6 +214,22 @@
             // 4. 送信！ (これでThymeleafが生成したCSRFトークンが一緒に送られます)
             deleteForm.submit();
         }
+
+        function submitClear(foodId) {
+            if (!confirm('この食材を廃棄してもよろしいですか？')) {
+                return; // キャンセルされたら何もしない
+            }
+
+            // 1. 裏方フォームを取得（消費ボタンと同じものを使い回す）
+            const deleteForm = document.getElementById('deleteForm');
+
+            // 2. 送信先URLを「全削除」のエンドポイントにセット
+            deleteForm.action = '/foods/' + foodId + '/clear';
+
+            // 3. 送信！ (これでCSRFトークンが自動的に含まれます)
+            deleteForm.submit();
+        }
+
         function displayToday() {
             const now = new Date();
 

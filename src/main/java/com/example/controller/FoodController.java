@@ -420,6 +420,18 @@ public class FoodController {
 
         return "redirect:/foods";
     }
+    
+    // 7. 対象の食材を完全に削除 (URL: POST /foods/{id}/clear)
+    @PostMapping("/{id}/clear")
+    public String clear(@PathVariable Long id) {
+        
+        // 対象の食材が存在するか確認してから削除
+        if (foodService.getFoodById(id).isPresent()) {
+            foodService.deleteFood(id);
+        }
+        
+        return "redirect:/foods";
+    }
 
     private void handleCategory(Food food, String categoryName, String unitStr) {
         if (categoryName == null || categoryName.strip().isEmpty()) {
